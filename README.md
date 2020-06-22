@@ -10,9 +10,9 @@
 NodeJS Rosetta SDK to create and interact with Rosetta API implementations
 </p>
 <p align="center">
-  <a href="https://circleci.com/gh/digibyte/digibyte-rosetta-nodeapi/tree/master"><img src="https://circleci.com/gh/digibyte/digibyte-rosetta-nodeapi/tree/master.svg?style=shield" /></a>
-  <a href="https://coveralls.io/github/digibyte/digibyte-rosetta-nodeapi"><img src="https://coveralls.io/repos/github/digibyte/digibyte-rosetta-nodeapi/badge.svg" /></a>
-  <a href="https://github.com/digibyte/digibyte-rosetta-nodeapi/blob/master/LICENSE.txt"><img src="https://img.shields.io/github/license/digibyte/digibyte-rosetta-nodeapi.svg" /></a>
+  <!--<a href="https://circleci.com/gh/DigiByte-Core/digibyte-rosetta-nodeapi/tree/master"><img src="https://circleci.com/gh/DigiByte-Core/digibyte-rosetta-nodeapi/tree/master.svg?style=shield" /></a>-->
+  <a href="https://coveralls.io/github/DigiByte-Core/digibyte-rosetta-nodeapi"><img src="https://coveralls.io/repos/github/DigiByte-Core/digibyte-rosetta-nodeapi/badge.svg" /></a>
+  <a href="https://github.com/DigiByte-Core/digibyte-rosetta-nodeapi/blob/master/LICENSE.txt"><img src="https://img.shields.io/github/license/DigiByte-Core/digibyte-rosetta-nodeapi.svg" /></a>
 </p>
 
 # OpenAPI Generated JavaScript/Express Server
