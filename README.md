@@ -7,7 +7,7 @@
    Rosetta SDK
 </h3>
 <p align="center">
-NodeJS SDK to create and interact with Rosetta API implementations
+NodeJS Rosetta SDK to create and interact with Rosetta API implementations
 </p>
 <p align="center">
   <a href="https://circleci.com/gh/digibyte/digibyte-rosetta-nodeapi/tree/master"><img src="https://circleci.com/gh/digibyte/digibyte-rosetta-nodeapi/tree/master.svg?style=shield" /></a>
