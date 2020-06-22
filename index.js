@@ -1,16 +1,32 @@
-const config = require('./config');
+const defaultConfig = require('./config');
 const logger = require('./logger');
 const ExpressServer = require('./expressServer');
 
-const launchServer = async () => {
-  try {
-    this.expressServer = new ExpressServer(config.URL_PORT, config.OPENAPI_YAML);
-    this.expressServer.launch();
-    logger.info('Express server running');
-  } catch (error) {
-    logger.error('Express Server failure', error.message);
-    await this.close();
+class RosettaServer {
+  constructor(configuration = {}) {
+    this.config = Object.assign(
+      {},
+      defaultConfig,
+      configuration
+    );
   }
-};
 
-launchServer().catch(e => logger.error(e));
+  async launch() {
+    try {
+      const port = this.config.URL_PORT;
+      const openAPIPath = this.config.OPENAPI_YAML;
+
+      this.expressServer = new ExpressServer(port, openAPIPath);
+      this.expressServer.launch();
+
+      logger.info(`Express server running on port ${port} using OpenAPI Spec: ${openAPIPath}`);
+    } catch (error) {
+      logger.error('Express Server failure', error.message);
+      await this.close();
+    }
+  }
+}
+
+module.exports = {
+  RosettaServer,
+};
