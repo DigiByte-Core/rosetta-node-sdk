@@ -1,9 +1,7 @@
-const {
-  RosettaServer,
-} = require('../');
+const RosettaSDK = require('../');
 
 // Create a server configuration
-const Server = new RosettaServer({
+const Server = new RosettaSDK.Server({
   URL_PORT: 3001,
 });
 
