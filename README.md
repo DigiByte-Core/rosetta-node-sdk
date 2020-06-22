@@ -12,9 +12,7 @@ NodeJS Rosetta SDK to create and interact with Rosetta API implementations
 <p align="center">
   <a href="https://circleci.com/gh/digibyte/digibyte-rosetta-nodeapi/tree/master"><img src="https://circleci.com/gh/digibyte/digibyte-rosetta-nodeapi/tree/master.svg?style=shield" /></a>
   <a href="https://coveralls.io/github/digibyte/digibyte-rosetta-nodeapi"><img src="https://coveralls.io/repos/github/digibyte/digibyte-rosetta-nodeapi/badge.svg" /></a>
-  <a href="https://goreportcard.com/report/github.com/digibyte/digibyte-rosetta-nodeapi"><img src="https://goreportcard.com/badge/github.com/digibyte/digibyte-rosetta-nodeapi" /></a>
   <a href="https://github.com/digibyte/digibyte-rosetta-nodeapi/blob/master/LICENSE.txt"><img src="https://img.shields.io/github/license/digibyte/digibyte-rosetta-nodeapi.svg" /></a>
-  <a href="https://pkg.go.dev/github.com/digibyte/digibyte-rosetta-nodeapi?tab=overview"><img src="https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white&style=shield" /></a>
 </p>
 
 # OpenAPI Generated JavaScript/Express Server
