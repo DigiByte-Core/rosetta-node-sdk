@@ -1,6 +1,6 @@
-const defaultConfig = require('./config');
-const logger = require('./logger');
-const ExpressServer = require('./expressServer');
+const defaultConfig = require('./config/default');
+const logger = require('./lib/logger');
+const ExpressServer = require('./lib/expressServer');
 
 class RosettaServer {
   constructor(configuration = {}) {
