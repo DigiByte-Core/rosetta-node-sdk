@@ -28,5 +28,5 @@ class RosettaServer {
 }
 
 module.exports = {
-  RosettaServer,
+  Server: RosettaServer,
 };

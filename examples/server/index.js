@@ -1,4 +1,4 @@
-const RosettaSDK = require('../');
+const RosettaSDK = require('../..');
 
 // Create a server configuration
 const Server = new RosettaSDK.Server({
