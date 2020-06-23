@@ -2,7 +2,7 @@ const RosettaSDK = require('../..');
 
 // Create a server configuration
 const Server = new RosettaSDK.Server({
-  URL_PORT: 3001,
+  URL_PORT: 8080,
 });
 
 Server.launch()

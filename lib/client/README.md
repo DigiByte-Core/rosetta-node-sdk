@@ -98,19 +98,18 @@ module: {
 Please follow the [installation](#installation) instruction and execute the following JS code:
 
 ```javascript
-var Rosetta = require('rosetta');
+var RosettaClient = require('rosetta-client');
 
+var api = new RosettaClient.AccountApi();
 
-var api = new Rosetta.AccountApi()
 var accountBalanceRequest = new Rosetta.AccountBalanceRequest(); // {AccountBalanceRequest} 
-var callback = function(error, data, response) {
+api.accountBalance(accountBalanceRequest, function(error, data, response) {
   if (error) {
     console.error(error);
   } else {
     console.log('API called successfully. Returned data: ' + data);
   }
-};
-api.accountBalance(accountBalanceRequest, callback);
+});
 
 ```
 
