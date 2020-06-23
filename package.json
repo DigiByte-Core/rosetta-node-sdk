@@ -6,7 +6,8 @@
   "scripts": {
     "prestart": "npm install",
     "start": "node index.js",
-    "run-example": "node example"
+    "run-example": "node examples/server",
+    "postinstall": "cd lib/client && npm run build"
   },
   "keywords": [
     "openapi-generator",
@@ -15,6 +16,7 @@
   "license": "Unlicense",
   "private": true,
   "dependencies": {
+    "@babel/cli": "^7.0.0",
     "body-parser": "^1.19.0",
     "camelcase": "^5.3.1",
     "cookie-parser": "^1.4.4",
@@ -24,6 +26,8 @@
     "js-yaml": "^3.3.0",
     "ono": "^5.0.1",
     "openapi-sampler": "^1.0.0-beta.15",
+    "rosetta-client": "file:lib/client",
+    "superagent": "3.7.0",
     "swagger-ui-express": "^4.0.2",
     "winston": "^3.2.1"
   },

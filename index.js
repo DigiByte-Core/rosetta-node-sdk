@@ -1,6 +1,7 @@
 const defaultConfig = require('./config/default');
 const logger = require('./lib/logger');
 const ExpressServer = require('./lib/expressServer');
+const Client = require('rosetta-client');
 
 class RosettaServer {
   constructor(configuration = {}) {
@@ -20,6 +21,7 @@ class RosettaServer {
       this.expressServer.launch();
 
       logger.info(`Express server running on port ${port} using OpenAPI Spec: ${openAPIPath}`);
+
     } catch (error) {
       logger.error('Express Server failure', error.message);
       await this.close();
@@ -27,6 +29,27 @@ class RosettaServer {
   }
 }
 
+class RosettaReconciler {
+
+}
+
+class RosettaSyncer {
+
+}
+
+class RosettaFetcher {
+
+}
+
+class RosettaParser {
+
+}
+
 module.exports = {
   Server: RosettaServer,
+  Reconciler: RosettaReconciler,
+  Syncer: RosettaSyncer,
+  Fetcher: RosettaFetcher,
+  Client: Client,
+  Parser: RosettaParser,
 };
