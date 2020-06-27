@@ -8,7 +8,7 @@
     "start": "node index.js",
     "run-example": "node examples/server",
     "postinstall": "cd lib/client && npm run build",
-    "eslint": "eslint **/*.js --ignore-pattern node_modules"
+    "eslint": "eslint ."
   },
   "keywords": [
     "openapi-generator",
