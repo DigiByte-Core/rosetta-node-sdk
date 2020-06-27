@@ -4,6 +4,8 @@ const ExpressServer = require('./lib/expressServer');
 
 const RosettaClient = require('rosetta-client');
 const RosettaFetcher = require('./lib/fetcher');
+const RosettaReconciler = require('./lib/reconciler');
+const RosettaParser = require('./lib/parser');
 
 const Errors = require('./lib/errors');
 const RosettaSyncer = require('./lib/syncer');
@@ -33,14 +35,6 @@ class RosettaServer {
       await this.close();
     }
   }
-}
-
-class RosettaReconciler {
-
-}
-
-class RosettaParser {
-
 }
 
 module.exports = {
