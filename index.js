@@ -18,6 +18,8 @@ class RosettaServer {
       defaultConfig,
       configuration
     );
+
+    this.expressServer = null;
   }
 
   async launch() {
@@ -34,6 +36,9 @@ class RosettaServer {
       logger.error('Express Server failure', error.message);
       await this.close();
     }
+  }
+
+  async close() {
   }
 }
 
