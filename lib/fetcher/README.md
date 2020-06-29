@@ -12,7 +12,7 @@ const RosettaSDK = require('rosetta-node-sdk');
 ```
 
 Here is how to create a basic fetcher with the default configuration:
-```
+```javascript
 /** 
  * Default configuration:
  *   API Endpoint: http://localhost:8000
@@ -23,7 +23,7 @@ const fetcher = new RosettaSDK.Fetcher();
 ```
 
 You may also want to configure the fetcher:
-```
+```javascript
 const fetcher = new RosettaSDK.Fetcher({
   /* See https://github.com/coveo/exponential-backoff#readme */
   retryOptions: {
@@ -53,7 +53,7 @@ const fetcher = new RosettaSDK.Fetcher({
 ```
 
 Example request using the fetcher instance:
-```
+```javascript
 const networkRequest = {
   blockchain: "blockchain",
   network:    "network",
