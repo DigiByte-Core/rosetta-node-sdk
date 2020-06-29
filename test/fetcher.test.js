@@ -1,7 +1,6 @@
 // fetcher.test.js
 const { expect } = require('chai');
 const Rosetta = require('..');
-const app = require('express')();
 const bodyParser = require('body-parser');
 
 const basicNetwork = {
@@ -29,6 +28,7 @@ const basicAmounts = [{
 const PORT = 8000;
 
 async function createServer(params) {
+  const app = require('express')();
   var tries = 0;
 
   app.use(bodyParser.json());
@@ -51,58 +51,108 @@ async function createServer(params) {
     res.json((response));
   });
 
-  const server = app.listen(8000, () => console.log('Listening'));
+  const server = app.listen(params.port || 8000, null);
 
   return server;
 }
 
-describe('Fetcher::Account', function () {
-  describe('TestAccountBalanceRetry', function () {
+const launchServer = (options) => {
+  return new Promise((fulfill, reject) => {
     let server;
-    const options = {
-      errorsBeforeSuccess: 0,
+
+    const cb = () => {
+      createServer(options).then(s => {
+        server = s;
+        fulfill();
+      });
     };
 
-    beforeEach((done) => {
-      const cb = () => {
-        createServer(options).then(s => {
-          server = s;
-          done();
-        });
-      };
+    if (server)
+      server.close(cb);
+    else
+      cb();  
+  });
+}
 
-      if (server)
-        server.close(cb);
-      else
-        cb();
-    });
-
+describe('Fetcher::Account', function () {
+  describe('TestAccountBalanceRetry', function () {
     it('no failures', async function () {
-      options.errorsBeforeSuccess = 0;
-      const fetcher = new Rosetta.Fetcher();
+      const server = await launchServer({
+        errorsBeforeSuccess: 0,
+        port: 8000,
+      });
 
-      // const { responseBlock, balances, metadata } =
+      const fetcher = new Rosetta.Fetcher({
+        retryOptions: {
+          numOfAttempts: 5,
+        },
+        server: {
+          port: 8000,
+        },
+      });
+
       const { block, balances, metadata } =
         await fetcher.accountBalanceRetry(basicNetwork, basicAccount, null);
 
-        console.log(basicAmounts, balances)
-
       expect(basicBlock).to.deep.equal(block);
-
       expect(basicAmounts.map((amount) => {
         return Rosetta.Client.Amount.constructFromObject(amount);
       })).to.deep.equal(balances);
-
       expect(metadata).to.deep.equal(metadata);
       return true;
     });
 
-    it('retry failures', async function (done) {
-      options.errorsBeforeSuccess = 2;
+    it('retry failures', async function () {
+      const server = await launchServer({
+        errorsBeforeSuccess: 2,
+        port: 8001,
+      });
+
+      const fetcher = new Rosetta.Fetcher({
+        retryOptions: {
+          numOfAttempts: 5,
+        },
+        server: {
+          port: 8001,
+        },
+      });
+
+      const { block, balances, metadata } =
+        await fetcher.accountBalanceRetry(basicNetwork, basicAccount, null);
+
+      expect(basicBlock).to.deep.equal(block);
+      expect(basicAmounts.map((amount) => {
+        return Rosetta.Client.Amount.constructFromObject(amount);
+      })).to.deep.equal(balances);
+      expect(metadata).to.deep.equal(metadata);
+      return true;      
     });
 
-    it('exhausted failures', async function (done) {
-      options.errorsBeforeSuccess = 2;
+    it('exhausted failures', async function () {
+      const server = await launchServer({
+        errorsBeforeSuccess: 2,
+        port: 8002,
+      });
+
+      const fetcher = new Rosetta.Fetcher({
+        retryOptions: {
+          numOfAttempts: 1,
+        },
+        server: {
+          port: 8002,
+        },
+      });
+
+      try {
+        const { block, balances, metadata } =
+        await fetcher.accountBalanceRetry(basicNetwork, basicAccount, null);
+
+      } catch(e) {
+        expect(e.status).to.equal(500);
+        return true;
+      }
+
+        throw new Error('Fetcher did exceed its max number of allowed retries');
     });
   });
 });
