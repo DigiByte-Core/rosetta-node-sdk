@@ -67,4 +67,4 @@ const response = await fetcher.accountBalanceRetry(networkRequest, account);
 ```
 
 ## More examples
-See [tests](../test/fetcher.test.js) for detailed examples.
+See [tests](../../test/fetcher.test.js) for detailed examples.

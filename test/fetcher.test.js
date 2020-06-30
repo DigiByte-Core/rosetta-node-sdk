@@ -1,7 +1,16 @@
 // fetcher.test.js
 const { expect } = require('chai');
 const Rosetta = require('..');
+const { constructPartialBlockIdentifier } = require('../lib/models');
 const bodyParser = require('body-parser');
+
+let START_PORT = 8000;
+
+function getPort() {
+  return START_PORT++;
+}
+
+const c = (arg) => JSON.parse(JSON.stringify(arg));
 
 const basicNetwork = {
   blockchain: "blockchain",
@@ -25,7 +34,44 @@ const basicAmounts = [{
   },
 }];
 
-const PORT = 8000;
+const basicFullBlock = {
+  block_identifier: basicBlock,
+  parent_block_identifier: {
+    index: 9,
+    hash: "block 9",
+  },
+  timestamp: 1582833600000,
+};
+
+const basicNetworkStatus = {
+  current_block_identifier: basicBlock,
+  current_block_timestamp:  1582833600000,
+  genesis_block_identifier: {
+    index: 0,
+    hash:  "block 0",
+  },
+};
+
+const basicNetworkList = [
+  basicNetwork,
+];
+
+
+const basicNetworkOptions = {
+  version: {
+    rosetta_version: "1.4.0",
+    node_version:    "0.0.1",
+  },
+  allow: {
+    operation_statuses: [
+      {
+        status:     "SUCCESS",
+        successful: true,
+      },
+    ],
+    operation_types: ["transfer"],
+  },
+};
 
 async function createServer(params) {
   const app = require('express')();
@@ -51,10 +97,63 @@ async function createServer(params) {
     res.json((response));
   });
 
+  app.post('/block', (req, res) => {
+    const expected = {
+      network_identifier: basicNetwork,
+      block_identifier: constructPartialBlockIdentifier(basicBlock),
+    };
+
+    expect(req.body).to.deep.equal(expected);
+
+    if (tries < params.errorsBeforeSuccess) {
+      tries++;
+      res.status(500);
+      return res.json({});
+    }
+
+    const response = new Rosetta.Client.BlockResponse(basicFullBlock);
+    res.json((response));    
+  });
+
+  app.post('/network/status', (req, res) => {
+    const expected = {
+      network_identifier: basicNetwork,
+      metadata: {},
+    };
+
+    const networkRequest = new Rosetta.Client.NetworkRequest(req.body);
+    expect(req.body).to.deep.equal(expected);
+
+    if (tries < params.errorsBeforeSuccess) {
+      tries++;
+      res.status(500);
+      return res.json({});
+    }
+
+    const response = Rosetta.Client.NetworkStatusResponse.constructFromObject(basicNetworkStatus);
+    res.json(response);        
+  });
+
+  app.post('/network/list', (req, res) => {
+    const metadataRequest = new Rosetta.Client.MetadataRequest.constructFromObject({ metadata: {} });
+    const expected = metadataRequest;
+
+    expect(req.body).to.deep.equal(expected);
+
+    if (tries < params.errorsBeforeSuccess) {
+      tries++;
+      res.status(500);
+      return res.json({});
+    }
+
+    const response = new Rosetta.Client.NetworkListResponse(basicNetworkList);
+    res.json(response);
+  });  
+
   const server = app.listen(params.port || 8000, null);
 
   return server;
-}
+};
 
 const launchServer = (options) => {
   return new Promise((fulfill, reject) => {
@@ -72,14 +171,16 @@ const launchServer = (options) => {
     else
       cb();  
   });
-}
+};
 
-describe('Fetcher::Account', function () {
-  describe('TestAccountBalanceRetry', function () {
+describe('Fetcher', function () {
+  describe('Test AccountBalanceRetry', function () {
     it('no failures', async function () {
+      const port = getPort();
+
       const server = await launchServer({
         errorsBeforeSuccess: 0,
-        port: 8000,
+        port,
       });
 
       const fetcher = new Rosetta.Fetcher({
@@ -87,7 +188,7 @@ describe('Fetcher::Account', function () {
           numOfAttempts: 5,
         },
         server: {
-          port: 8000,
+          port,
         },
       });
 
@@ -103,9 +204,11 @@ describe('Fetcher::Account', function () {
     });
 
     it('retry failures', async function () {
+      const port = getPort();
+
       const server = await launchServer({
         errorsBeforeSuccess: 2,
-        port: 8001,
+        port,
       });
 
       const fetcher = new Rosetta.Fetcher({
@@ -113,7 +216,7 @@ describe('Fetcher::Account', function () {
           numOfAttempts: 5,
         },
         server: {
-          port: 8001,
+          port,
         },
       });
 
@@ -129,9 +232,11 @@ describe('Fetcher::Account', function () {
     });
 
     it('exhausted failures', async function () {
+      const port = getPort();
+
       const server = await launchServer({
         errorsBeforeSuccess: 2,
-        port: 8002,
+        port,
       });
 
       const fetcher = new Rosetta.Fetcher({
@@ -139,7 +244,7 @@ describe('Fetcher::Account', function () {
           numOfAttempts: 1,
         },
         server: {
-          port: 8002,
+          port,
         },
       });
 
@@ -152,7 +257,258 @@ describe('Fetcher::Account', function () {
         return true;
       }
 
-        throw new Error('Fetcher did exceed its max number of allowed retries');
+      throw new Error('Fetcher did exceed its max number of allowed retries');
     });
   });
+
+  /**
+   * BlockRetry
+   */
+
+  describe('Test BlockRetry', function () {
+    it('no failures', async function () {
+      const port = getPort();
+
+      const server = await launchServer({
+        errorsBeforeSuccess: 0,
+        port,
+      });
+
+      const fetcher = new Rosetta.Fetcher({
+        retryOptions: {
+          numOfAttempts: 5,
+        },
+        server: {
+          port,
+        },
+      });
+
+      const block =
+        await fetcher.blockRetry(basicNetwork, constructPartialBlockIdentifier(basicBlock));
+
+      expect(c(block)).to.deep.equal(basicFullBlock);
+      return true;
+    });
+
+    it('retry failures', async function () {
+      const port = getPort();
+
+      const server = await launchServer({
+        errorsBeforeSuccess: 2,
+        port,
+      });
+
+      const fetcher = new Rosetta.Fetcher({
+        retryOptions: {
+          numOfAttempts: 5,
+        },
+        server: {
+          port,
+        },
+      });
+
+      const block =
+        await fetcher.blockRetry(basicNetwork, constructPartialBlockIdentifier(basicBlock));
+
+      expect(c(block)).to.deep.equal(basicFullBlock);
+      return true;
+    });
+
+    it('exhausted failures', async function () {
+      const port = getPort();
+
+      const server = await launchServer({
+        errorsBeforeSuccess: 2,
+        port,
+      });
+
+      const fetcher = new Rosetta.Fetcher({
+        retryOptions: {
+          numOfAttempts: 1,
+        },
+        server: {
+          port,
+        },
+      });
+
+      try {
+        const block =
+          await fetcher.blockRetry(basicNetwork, constructPartialBlockIdentifier(basicBlock));
+
+      } catch(e) {
+        expect(e.status).to.equal(500);
+        return true;
+      }
+
+      throw new Error('Fetcher did exceed its max number of allowed retries');
+    });
+  });  
+
+  /*
+   * NETWORK
+   */
+
+  describe('Test NetworkListRetry', function () {
+    it('no failures', async function () {
+      const port = getPort();
+
+      const server = await launchServer({
+        errorsBeforeSuccess: 0,
+        port,
+      });
+
+      const fetcher = new Rosetta.Fetcher({
+        retryOptions: {
+          numOfAttempts: 5,
+        },
+        server: {
+          port,
+        },
+      });
+
+      const networkList =
+        await fetcher.networkListRetry({});
+
+      const expectedResponse = new Rosetta.Client.NetworkListResponse(basicNetworkList);
+
+      expect(c(networkList)).to.deep.equal(expectedResponse);
+      return true;
+    });
+
+    it('retry failures', async function () {
+      const port = getPort();
+
+      const server = await launchServer({
+        errorsBeforeSuccess: 2,
+        port,
+      });
+
+      const fetcher = new Rosetta.Fetcher({
+        retryOptions: {
+          numOfAttempts: 5,
+        },
+        server: {
+          port,
+        },
+      });
+
+      const networkList =
+        await fetcher.networkListRetry({});
+
+      const expectedResponse = new Rosetta.Client.NetworkListResponse(basicNetworkList);
+
+      expect(c(networkList)).to.deep.equal(expectedResponse);
+      return true;
+    });
+
+    it('exhausted retries', async function () {
+      const port = getPort();
+
+      const server = await launchServer({
+        errorsBeforeSuccess: 2,
+        port,
+      });
+
+      const fetcher = new Rosetta.Fetcher({
+        retryOptions: {
+          numOfAttempts: 1,
+        },
+        server: {
+          port,
+        },
+      });
+
+      try {
+        const networkList =
+          await fetcher.networkListRetry({});
+
+      } catch(e) {
+        expect(e.status).to.equal(500);
+        return true;
+      }
+
+      throw new Error('Fetcher did exceed its max number of allowed retries');            
+    });    
+  }); 
+
+  describe('Test NetworkStatusRetry', function () {
+    it('no failures', async function () {
+      const port = getPort();
+
+      const server = await launchServer({
+        errorsBeforeSuccess: 0,
+        port,
+      });
+
+      const fetcher = new Rosetta.Fetcher({
+        retryOptions: {
+          numOfAttempts: 5,
+        },
+        server: {
+          port,
+        },
+      });
+
+      const networkList =
+        await fetcher.networkStatusRetry(basicNetwork);
+
+      expect(c(networkList)).to.deep.equal(basicNetworkStatus);
+      return true;
+    });
+
+    it('retry failures', async function () {
+      const port = getPort();
+
+      const server = await launchServer({
+        errorsBeforeSuccess: 2,
+        port,
+      });
+
+      const fetcher = new Rosetta.Fetcher({
+        retryOptions: {
+          numOfAttempts: 5,
+        },
+        server: {
+          port,
+        },
+      });
+
+      const networkList =
+        await fetcher.networkStatusRetry(basicNetwork);
+
+      expect(c(networkList)).to.deep.equal(basicNetworkStatus);
+      return true;
+    });
+
+    it('exhausted retries', async function () {
+      const port = getPort();
+
+      const server = await launchServer({
+        errorsBeforeSuccess: 2,
+        port,
+      });
+
+      const fetcher = new Rosetta.Fetcher({
+        retryOptions: {
+          numOfAttempts: 1,
+        },
+        server: {
+          port,
+        },
+      });
+
+      try {
+        const networkList =
+          await fetcher.networkStatusRetry(basicNetwork);
+
+      } catch(e) {
+        expect(e.status).to.equal(500);
+        return true;
+      }
+
+      throw new Error('Fetcher did exceed its max number of allowed retries');      
+    });    
+  });
+
+ 
 });
