@@ -8,7 +8,8 @@
     "start": "node index.js",
     "run-example": "node examples/server",
     "postinstall": "cd lib/client && npm run build",
-    "eslint": "eslint ."
+    "eslint": "eslint .",
+    "test": "mocha  --timeout 3000 --exit test && cd lib/client && npm run test"
   },
   "keywords": [
     "openapi-generator",
