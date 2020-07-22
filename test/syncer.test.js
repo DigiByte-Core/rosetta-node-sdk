@@ -181,7 +181,7 @@ const blockSequence = [
   },
 ];
 
-describe('ProcessBlock', function () {
+describe('Syncer', function () {
   should();
 
   const syncer = new RosettaSDK.Syncer({
