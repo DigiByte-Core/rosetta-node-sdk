@@ -24,6 +24,13 @@ const { expect } = require('chai');
 const RosettaSDK = require('..');
 
 const { Hash } = RosettaSDK.Utils;
+const {
+  Descriptions,
+  OperationDescription,
+  AccountDescription,
+  AmountDescription,
+  Sign,
+} = RosettaSDK.InternalModels;
 
 const currency = { /* Currency */
   symbol:   "Blah",
@@ -98,6 +105,8 @@ const defaultStatus = [ /* OperationStatus */
   },
 ];
 
+const c = (arg) => arg == undefined ? arg : JSON.parse(JSON.stringify(arg));
+
 const createTransaction = (hash, address, value, currency) => {
   return { /* Transaction */
     transaction_identifier: {
@@ -148,190 +157,1182 @@ const createAsserter = (allowedStatuses) => {
 };
 
 describe('Parser', function () {
-  it('be able to parse a block', async function () {
-    const asserter = createAsserter(defaultStatus);
+  describe('Test Balance Changes', function () {
+    it('be able to parse a block', async function () {
+      const asserter = createAsserter(defaultStatus);
 
-    const parser = new RosettaSDK.Parser({
-      asserter,
-    });
+      const parser = new RosettaSDK.Parser({
+        asserter,
+      });
 
-    const block = {
-      block_identifier: {
-        hash: '1',
-        index: 1,
-      },
-
-      parent_block_identifier: {
-        hash: '0',
-        index: 0,
-      },
-
-      transactions: [
-        recipientTransaction,
-      ],
-
-      timestamp: asserter.minUnixEpoch + 1,
-    };
-
-    const expectedChanges = [
-      {
-        account_identifier: recipient,
-        currency: currency,
+      const block = {
         block_identifier: {
           hash: '1',
           index: 1,
         },
-        difference: '100',
-      },
-    ];
 
-    const isOrphan = false;
-
-    const changes = parser.balanceChanges(block, isOrphan);
-    expect(changes).to.deep.equal(expectedChanges);
-  });
-
-  it('work with an excempt function', async function () {
-    const asserter = createAsserter(defaultStatus);
-
-    const parser = new RosettaSDK.Parser({
-      asserter,
-      exemptFunc: (op) => 
-        Hash(op.account) == Hash(recipientOperation.account),      
-    });
-
-    const block = {
-      block_identifier: {
-        hash: '1',
-        index: 1,
-      },
-
-      parent_block_identifier: {
-        hash: '0',
-        index: 0,
-      },
-
-      transactions: [
-        recipientTransaction,
-      ],
-
-      timestamp: asserter.minUnixEpoch + 1,
-    };
-
-    const expectedChanges = [];
-    const isOrphan = false;
-
-    const changes = parser.balanceChanges(block, isOrphan);
-    expect(changes).to.deep.equal(expectedChanges);    
-  });
-
-  it('should group balanceChanges if an address receives multiple utxos', async function () {
-    const asserter = createAsserter(defaultStatus);
-
-    const parser = new RosettaSDK.Parser({
-      asserter,
-    });
-
-    const block = {
-      block_identifier: {
-        hash: '1',
-        index: 1,
-      },
-
-      parent_block_identifier: {
-        hash: '0',
-        index: 0,
-      },
-
-      transactions: [
-        createTransaction('tx1', 'addr1', '100', currency),
-        createTransaction('tx2', 'addr1', '150', currency),
-        createTransaction('tx3', 'addr2', '150', currency),
-      ],
-
-      timestamp: asserter.minUnixEpoch + 1,
-    };
-
-    const expectedChanges = [
-      {
-        account_identifier: { address: 'addr1' },
-        currency: currency,
-        block_identifier: {
-          hash: '1',
-          index: 1,
-        },
-        difference: '250',
-      },
-
-      {
-        account_identifier: { address: 'addr2' },
-        currency: currency,
-        block_identifier: {
-          hash: '1',
-          index: 1,
-        },
-        difference: '150',
-      },
-    ];
-
-    const isOrphan = false;
-
-    const changes = parser.balanceChanges(block, isOrphan);
-    expect(changes).to.deep.equal(expectedChanges);
-  });
-
-  it('should reduce balance again if an orphan block appears', async function () {
-    const asserter = createAsserter(defaultStatus);
-
-    const parser = new RosettaSDK.Parser({
-      asserter,
-    });
-
-    const block = {
-      block_identifier: {
-        hash: '1',
-        index: 1,
-      },
-
-      parent_block_identifier: {
-        hash: '0',
-        index: 0,
-      },
-
-      transactions: [
-        createTransaction('tx1', 'addr1', '100', currency),
-        createTransaction('tx2', 'addr1', '150', currency),
-        createTransaction('tx3', 'addr2', '150', currency),
-      ],
-
-      timestamp: asserter.minUnixEpoch + 1,
-    };
-
-    const expectedChanges = [
-      {
-        account_identifier: { address: 'addr1' },
-        currency: currency,
-        block_identifier: {
+        parent_block_identifier: {
           hash: '0',
           index: 0,
         },
-        difference: '-250',
-      },
 
-      {
-        account_identifier: { address: 'addr2' },
-        currency: currency,
+        transactions: [
+          recipientTransaction,
+        ],
+
+        timestamp: asserter.minUnixEpoch + 1,
+      };
+
+      const expectedChanges = [
+        {
+          account_identifier: recipient,
+          currency: currency,
+          block_identifier: {
+            hash: '1',
+            index: 1,
+          },
+          difference: '100',
+        },
+      ];
+
+      const isOrphan = false;
+
+      const changes = parser.balanceChanges(block, isOrphan);
+      expect(changes).to.deep.equal(expectedChanges);
+    });
+
+    it('work with an excempt function', async function () {
+      const asserter = createAsserter(defaultStatus);
+
+      const parser = new RosettaSDK.Parser({
+        asserter,
+        exemptFunc: (op) => 
+          Hash(op.account) == Hash(recipientOperation.account),      
+      });
+
+      const block = {
         block_identifier: {
+          hash: '1',
+          index: 1,
+        },
+
+        parent_block_identifier: {
           hash: '0',
           index: 0,
         },
-        difference: '-150',
-      },
-    ];
 
-    const isOrphan = true;
+        transactions: [
+          recipientTransaction,
+        ],
 
-    const changes = parser.balanceChanges(block, isOrphan);
-    expect(changes).to.deep.equal(expectedChanges);
+        timestamp: asserter.minUnixEpoch + 1,
+      };
+
+      const expectedChanges = [];
+      const isOrphan = false;
+
+      const changes = parser.balanceChanges(block, isOrphan);
+      expect(changes).to.deep.equal(expectedChanges);    
+    });
+
+    it('should group balanceChanges if an address receives multiple utxos', async function () {
+      const asserter = createAsserter(defaultStatus);
+
+      const parser = new RosettaSDK.Parser({
+        asserter,
+      });
+
+      const block = {
+        block_identifier: {
+          hash: '1',
+          index: 1,
+        },
+
+        parent_block_identifier: {
+          hash: '0',
+          index: 0,
+        },
+
+        transactions: [
+          createTransaction('tx1', 'addr1', '100', currency),
+          createTransaction('tx2', 'addr1', '150', currency),
+          createTransaction('tx3', 'addr2', '150', currency),
+        ],
+
+        timestamp: asserter.minUnixEpoch + 1,
+      };
+
+      const expectedChanges = [
+        {
+          account_identifier: { address: 'addr1' },
+          currency: currency,
+          block_identifier: {
+            hash: '1',
+            index: 1,
+          },
+          difference: '250',
+        },
+
+        {
+          account_identifier: { address: 'addr2' },
+          currency: currency,
+          block_identifier: {
+            hash: '1',
+            index: 1,
+          },
+          difference: '150',
+        },
+      ];
+
+      const isOrphan = false;
+
+      const changes = parser.balanceChanges(block, isOrphan);
+      expect(changes).to.deep.equal(expectedChanges);
+    });
+
+    it('should reduce balance again if an orphan block appears', async function () {
+      const asserter = createAsserter(defaultStatus);
+
+      const parser = new RosettaSDK.Parser({
+        asserter,
+      });
+
+      const block = {
+        block_identifier: {
+          hash: '1',
+          index: 1,
+        },
+
+        parent_block_identifier: {
+          hash: '0',
+          index: 0,
+        },
+
+        transactions: [
+          createTransaction('tx1', 'addr1', '100', currency),
+          createTransaction('tx2', 'addr1', '150', currency),
+          createTransaction('tx3', 'addr2', '150', currency),
+        ],
+
+        timestamp: asserter.minUnixEpoch + 1,
+      };
+
+      const expectedChanges = [
+        {
+          account_identifier: { address: 'addr1' },
+          currency: currency,
+          block_identifier: {
+            hash: '0',
+            index: 0,
+          },
+          difference: '-250',
+        },
+
+        {
+          account_identifier: { address: 'addr2' },
+          currency: currency,
+          block_identifier: {
+            hash: '0',
+            index: 0,
+          },
+          difference: '-150',
+        },
+      ];
+
+      const isOrphan = true;
+
+      const changes = parser.balanceChanges(block, isOrphan);
+      expect(changes).to.deep.equal(expectedChanges);
+    });
+  });
+
+  describe('Test Sort Operations', function () {
+    it('should sort operations correctly', function () {
+      const operationsMap = {
+        2: {
+          operations: [
+            { operation_identifier: { index: 2 } },
+          ],
+        },
+
+        4: {
+          operations: [
+            { operation_identifier: { index: 4 } },
+          ],
+        },
+
+        0: {
+          operations: [
+            { operation_identifier: { index: 1 }, related_operations: [{ index: 0 }] },
+            { operation_identifier: { index: 3 }, related_operations: [{ index: 1 }] },
+            { operation_identifier: { index: 0 } },
+          ],
+        },
+
+        5: {
+          operations: [
+            { operation_identifier: { index: 5 } },
+          ],
+        },      
+      };
+
+      const parser = new RosettaSDK.Parser();
+
+      const expectedResult = [
+        {
+          operations: [
+            { operation_identifier: { index: 0 } },
+            { operation_identifier: { index: 1 }, related_operations: [{ index: 0 }] },
+            { operation_identifier: { index: 3 }, related_operations: [{ index: 1 }] },
+          ],
+        },
+
+        {
+          operations: [
+            { operation_identifier: { index: 2 } },
+          ],
+        },
+
+        {
+          operations: [
+            { operation_identifier: { index: 4 } },
+          ],
+        },
+
+        {
+          operations: [
+            { operation_identifier: { index: 5 } },
+          ],
+        },        
+      ];
+
+      const result = parser.sortOperationsGroup(6, operationsMap);
+
+      expect(result).to.deep.equal(expectedResult);
+    });
+  });
+
+  describe('Test Group Operations', function () {
+    it('should return nothing if there is no transaction', async function () {
+      const parser = new RosettaSDK.Parser();
+      const transaction = new RosettaSDK.Client.Transaction();
+      const result = parser.groupOperations(transaction);
+
+      expect(result).to.deep.equal([]);
+    });
+
+    it('should not group unrelated operations', async function () {
+      const parser = new RosettaSDK.Parser();
+      const transaction = {
+        operations: [
+          {
+            operation_identifier: { index: 0 },
+            type: 'op 0',
+            amount: {
+              currency: { symbol: 'BTC' },
+            },
+          },
+
+          {
+            operation_identifier: { index: 1 },
+            type: 'op 1',
+          },
+
+          {
+            operation_identifier: { index: 2 },
+            type: 'op 2',
+          },          
+        ],
+      };
+
+      const expectedResult = [
+        {
+          type: 'op 0',
+          operations: [
+            {
+              operation_identifier: { index: 0 },
+              type: 'op 0',
+              amount: {
+                currency: { symbol: 'BTC', },
+              },
+            },
+          ],
+
+          nil_amount_present: false,
+          currencies: [
+            { symbol: 'BTC' }
+          ],
+        },
+
+        {
+          type: 'op 1',
+          operations: [
+            {
+              operation_identifier: { index: 1 },
+              type: 'op 1',
+            },
+          ],
+
+          nil_amount_present: true,
+          currencies: [],
+        },
+
+        {
+          type: 'op 2',
+          operations: [
+            {
+              operation_identifier: { index: 2 },
+              type: 'op 2',
+            },
+          ],
+
+          nil_amount_present: true,
+          currencies: [],
+        },        
+      ];      
+
+      const result = parser.groupOperations(transaction);
+
+      expect(c(result)).to.deep.equal(expectedResult);      
+    });
+
+    it('should group related operations', async function () {
+      const parser = new RosettaSDK.Parser();
+      const transaction = {
+        operations: [
+          {
+            operation_identifier: { index: 0 },
+            type: 'type 0',
+            amount: {
+              currency: { symbol: 'BTC' },
+            },
+          },
+
+          {
+            operation_identifier: { index: 1 },
+            type: 'type 1',
+          },
+
+          {
+            operation_identifier: { index: 2 },
+            type: 'type 2',
+            amount: {
+              currency: { symbol: 'BTC' },
+            }
+          },
+
+          {
+            operation_identifier: { index: 3 },
+            related_operations: [
+              { index: 2 },
+            ],
+            type: 'type 2',
+            amount: {
+              currency: { symbol: 'ETH' },
+            }
+          },
+
+          {
+            operation_identifier: { index: 4 },
+            related_operations: [{ index: 2 }],
+            type: 'type 4',
+          },
+
+          {
+            operation_identifier: { index: 5 },
+            related_operations: [{ index: 0 }],
+            type: 'type 0',
+            amount: {
+              currency: { symbol: 'BTC' },
+            },
+          },
+        ],
+      };
+
+      const expectedResult = [
+        {
+          type: 'type 0',
+          nil_amount_present: false,
+          operations: [
+            {
+              operation_identifier: { index: 0 },
+              type: 'type 0',
+              amount: {
+                currency: { symbol: 'BTC' },
+              }
+            },
+
+            {
+              operation_identifier: { index: 5 },
+              related_operations: [
+                { index: 0 },
+              ],
+              type: 'type 0',
+              amount: {
+                currency: { symbol: 'BTC' },
+              }
+            },       
+          ],
+
+          currencies: [
+            { symbol: 'BTC' },
+          ],
+        },
+
+        {
+          type: 'type 1',
+          nil_amount_present: true,
+          operations: [
+            {
+              operation_identifier: { index: 1 },
+              type: 'type 1',
+            },   
+          ],
+
+          currencies: [],
+        },   
+
+        {
+          type: '',
+          nil_amount_present: true,
+          currencies: [
+            { symbol: 'BTC' },
+            { symbol: 'ETH' },
+          ],
+          operations: [
+            {
+              operation_identifier: { index: 2 },
+              type: 'type 2',
+              amount: {
+                currency: { symbol: 'BTC' },
+              }
+            },
+
+            {
+              operation_identifier: { index: 3 },
+              related_operations: [
+                { index: 2 },
+              ],
+              type: 'type 2',
+              amount: {
+                currency: { symbol: 'ETH' },
+              }
+            },
+
+            {
+              operation_identifier: { index: 4 },
+              related_operations: [
+                { index: 2 },
+              ],
+              type: 'type 4',
+            },        
+          ],
+        },     
+      ];
+
+      const result = parser.groupOperations(transaction);
+      expect(c(result)).to.deep.equal(expectedResult);
+    });
+  });
+
+  describe('Test Match Operations', function () {
+    it('should detect a simple transfer (with extra empty op)', async function () {
+      const parser = new RosettaSDK.Parser();
+
+      const descriptions = new Descriptions({
+        opposite_amounts: [[0, 1]],
+        operation_descriptions: [
+          new OperationDescription({
+            account: new AccountDescription({ exists: true }),
+            amount: new AmountDescription({
+              exists: true,
+              sign: Sign.Negative
+            }),
+          }),
+
+          new OperationDescription({ 
+            account: new AccountDescription({ exists: true }),
+            amount: new AmountDescription({
+              exists: true,
+              sign: Sign.Positive
+            }),
+          }),            
+        ],
+      });
+
+      const operations = [
+        {
+          account: { address: 'addr2' },
+          amount: { value: '100' },
+        },
+
+        {}, // should be ignored
+
+        {
+          account: { address: 'addr1' },
+          amount: { value: '-100' },
+        },
+      ];
+
+      const expectedMatches = [
+        {
+          operations: [{
+            account: { address: 'addr1' },
+            amount: { value: '-100' },
+          }],
+
+          amounts: [-100]
+        },
+
+        {
+          operations: [{
+            account: { address: 'addr2' },
+            amount: { value: '100' },
+          }],
+
+          amounts: [100],
+        }        
+      ];
+
+      let matches;
+
+      try {
+        matches = parser.MatchOperations(descriptions, operations);
+      } catch (e) {
+        console.error(e);
+      }
+
+      expect(c(matches)).to.deep.equal(expectedMatches);
+    });
+
+    it('simple transfer (with missing account error)', async function () {
+      const parser = new RosettaSDK.Parser();
+
+      const descriptions = new Descriptions({
+        opposite_amounts: [[0, 1]],
+        equal_addresses: [[0, 1]],
+        operation_descriptions: [
+          new OperationDescription({
+            account: new AccountDescription({ exists: false }),
+            amount: new AmountDescription({
+              exists: true,
+              sign: Sign.Negative
+            }),
+          }),
+
+          new OperationDescription({ 
+            account: new AccountDescription({ exists: true }),
+            amount: new AmountDescription({
+              exists: true,
+              sign: Sign.Positive
+            }),
+          }),            
+        ],
+      });
+
+      const operations = [
+        {
+          account: { address: 'addr2' },
+          amount: { value: '100' },
+        },
+
+        {
+          amount: { value: '-100' },
+        },
+      ];
+
+      const expectedMatches = undefined;
+
+      let matches;
+
+      try {
+        matches = parser.MatchOperations(descriptions, operations);
+      } catch (e) {
+        // console.error(e);
+        expect(e.name).to.equal('ParserError');
+        expect(e.message).to.equal('account is null');
+      }
+
+      expect(matches).to.deep.equal(expectedMatches);
+    });    
+
+    it('simple transfer (check type)', async function () {
+      const parser = new RosettaSDK.Parser();
+
+      const descriptions = new Descriptions({
+        opposite_amounts: [[0, 1]],
+        operation_descriptions: [
+          new OperationDescription({
+            account: new AccountDescription({ exists: true }),
+            type: 'input',
+          }),
+
+          new OperationDescription({ 
+            account: new AccountDescription({ exists: true }),
+            type: 'output',
+          }),            
+        ],
+      });
+
+      const operations = [
+        {
+          account: { address: 'addr2' },
+          amount: { value: '100' },
+          type: 'output',
+        },
+
+        {}, // should be ignored
+
+        {
+          account: { address: 'addr1' },
+          amount: { value: '-100' },
+          type: 'input',
+        },
+      ];
+
+      const expectedMatches = [
+        {
+          operations: [{
+            account: { address: 'addr1' },
+            amount: { value: '-100' },
+            type: 'input',
+          }],
+
+          amounts: [-100]
+        },
+
+        {
+          operations: [{
+            account: { address: 'addr2' },
+            amount: { value: '100' },
+            type: 'output',
+          }],
+
+          amounts: [100],
+        }        
+      ];
+
+      let matches;
+
+      try {
+        matches = parser.MatchOperations(descriptions, operations);
+      } catch (e) {
+        console.error(e);
+      }
+
+      expect(c(matches)).to.deep.equal(expectedMatches);
+    });    
+
+    it('simple transfer (reject extra op)', async function () {
+      const parser = new RosettaSDK.Parser();
+
+      const descriptions = new Descriptions({
+        err_unmatched: true,
+        opposite_amounts: [[0, 1]],
+        operation_descriptions: [
+          new OperationDescription({
+            account: new AccountDescription({ exists: true }),
+            amount: new AmountDescription({
+              exists: true,
+              sign: Sign.Negative,
+            }),
+          }),
+
+          new OperationDescription({ 
+            account: new AccountDescription({ exists: true }),
+            amount: new AmountDescription({
+              exists: true,
+              sign: Sign.Positive,
+            }),            
+          }),            
+        ],
+      });
+
+      const operations = [
+        {
+          account: { address: 'addr2' },
+          amount: { value: '100' },
+        },
+
+        {}, // should be ignored
+
+        {
+          account: { address: 'addr1' },
+          amount: { value: '-100' },
+        },
+      ];
+
+      const expectedMatches = undefined;
+
+      let matches;
+
+      try {
+        matches = parser.MatchOperations(descriptions, operations);
+      } catch (e) {
+        //console.error(e);
+        expect(e.name).to.equal('ParserError');
+        expect(e.message).to.equal('Unable to find match for operation at index 1');
+      }
+
+      expect(matches).to.deep.equal(expectedMatches);
+    });    
+
+    it('simple transfer (with unequal amounts)', async function () {
+      const parser = new RosettaSDK.Parser();
+
+      const descriptions = new Descriptions({
+        equal_amounts: [[0, 1]],
+        operation_descriptions: [
+          new OperationDescription({
+            account: new AccountDescription({ exists: true }),
+            amount: new AmountDescription({
+              exists: true,
+              sign: Sign.Negative,
+            }),
+          }),
+
+          new OperationDescription({ 
+            account: new AccountDescription({ exists: true }),
+            amount: new AmountDescription({
+              exists: true,
+              sign: Sign.Positive,
+            }),            
+          }),            
+        ],
+      });
+
+      const operations = [
+        {
+          account: { address: 'addr2' },
+          amount: { value: '100' }, // Yoshi: unequal? 
+        },
+
+        {}, // should be ignored
+
+        {
+          account: { address: 'addr1' },
+          amount: { value: '-100' },
+        },
+      ];
+
+      const expectedMatches = undefined;
+
+      let matches;
+      let thrown = false;
+
+      try {
+        matches = parser.MatchOperations(descriptions, operations);
+      } catch (e) {
+        //console.error(e);
+        expect(e.name).to.equal('ParserError');
+        expect(e.message).to.equal('100 is not equal to -100');
+        thrown = true;
+      }
+
+      expect(thrown).to.equal(true);
+      expect(matches).to.deep.equal(expectedMatches);
+    });    
+
+    it('simple transfer (with equal amounts)', async function () {
+      const parser = new RosettaSDK.Parser();
+
+      const descriptions = new Descriptions({
+        opposite_amounts: [[0, 1]],
+        operation_descriptions: [
+          new OperationDescription({
+            account: new AccountDescription({ exists: true }),
+            amount: new AmountDescription({ exists: true }),
+          }),
+
+          new OperationDescription({ 
+            account: new AccountDescription({ exists: true }),
+            amount: new AmountDescription({ exists: true }),            
+          }),            
+        ],
+      });
+
+      const operations = [
+        {
+          account: { address: 'addr2' },
+          amount: { value: '100' },
+        },
+
+        {}, // should be ignored
+
+        {
+          account: { address: 'addr1' },
+          amount: { value: '100' },
+        },
+      ];
+
+      const expectedMatches = undefined;
+
+      let matches;
+
+      try {
+        matches = parser.MatchOperations(descriptions, operations);
+      } catch (e) {
+        //console.error(e);
+        expect(e.name).to.equal('ParserError');
+        expect(e.message).to.equal('100 and 100 have the same sign');
+      }
+
+      expect(matches).to.deep.equal(expectedMatches);
+    });    
+
+    it('simple transfer (with currency)', async function () {
+      const parser = new RosettaSDK.Parser();
+
+      const descriptions = new Descriptions({
+        opposite_amounts: [[0, 1]],
+        operation_descriptions: [
+          new OperationDescription({
+            account: new AccountDescription({ exists: true }),
+            amount: new AmountDescription({
+              exists: true,
+              sign: Sign.Negative,
+              currency: {
+                symbol: 'ETH',
+                decimals: 18,
+              },
+            }),
+          }),
+
+          new OperationDescription({ 
+            account: new AccountDescription({ exists: true }),
+            amount: new AmountDescription({
+              exists: true,
+              sign: Sign.Positive,
+              currency: {
+                symbol: 'BTC',
+                decimals: 8,
+              },
+            }),            
+          }),            
+        ],
+      });
+
+      const operations = [
+        {
+          account: { address: 'addr2' },
+          amount: {
+            value: '100',
+            currency: {
+              symbol: 'BTC',
+              decimals: 8,
+            },
+          },
+        },
+
+        {},
+
+        {
+          account: { address: 'addr1' },
+          amount: {
+            value: '-100',
+            currency: {
+              symbol: 'ETH',
+              decimals: 18,
+            },
+          },
+        },
+      ];
+
+      const expectedMatches = [
+        {
+          operations: [{
+            account: { address: 'addr1' },
+            amount: {
+              value: '-100',
+              currency: {
+                symbol: 'ETH',
+                decimals: 18,
+              },
+            },
+          }],
+
+          amounts: [-100],
+        },
+
+        {
+          operations: [{
+            account: { address: 'addr2' },
+            amount: {
+              value: '100',
+              currency: {
+                symbol: 'BTC',
+                decimals: 8,
+              },
+            },
+          }],
+
+          amounts: [100],
+        },
+      ];
+
+      let matches;
+
+      try {
+        matches = parser.MatchOperations(descriptions, operations);
+      } catch (e) {
+        console.error(e);
+      }
+
+      expect(c(matches)).to.deep.equal(expectedMatches);
+    });    
+
+    it('simple transfer (with missing currency)', async function () {
+      const parser = new RosettaSDK.Parser();
+
+      const descriptions = new Descriptions({
+        opposite_amounts: [[0, 1]],
+        operation_descriptions: [
+          new OperationDescription({
+            account: new AccountDescription({ exists: true }),
+            amount: new AmountDescription({
+              exists: true,
+              sign: Sign.Negative,
+              currency: {
+                symbol: 'ETH',
+                decimals: 18,
+              },
+            }),
+          }),
+
+          new OperationDescription({ 
+            account: new AccountDescription({ exists: true }),
+            amount: new AmountDescription({
+              exists: true,
+              sign: Sign.Positive,
+              currency: {
+                symbol: 'BTC',
+                decimals: 8,
+              },
+            }),            
+          }),            
+        ],
+      });
+
+      const operations = [
+        {
+          account: { address: 'addr2' },
+          amount: {
+            value: '100',
+            currency: {
+              symbol: 'ETH',
+              decimals: 18,
+            },
+          },
+        },
+
+        {},
+
+        {
+          account: { address: 'addr1' },
+          amount: {
+            value: '-100',
+            currency: {
+              symbol: 'ETH',
+              decimals: 18,
+            },
+          },
+        },
+      ];
+
+      const expectedMatches = undefined;
+
+      let matches;
+      let thrown = false;
+
+      try {
+        matches = parser.MatchOperations(descriptions, operations);
+      } catch (e) {
+        expect(e.name).to.equal('ParserError');
+        expect(e.message).to.equal('Could not find match for description 1');
+        thrown = true;
+      }
+
+      expect(thrown).to.equal(true);
+      expect(c(matches)).to.deep.equal(expectedMatches);
+    });   
+
+    it('simple transfer (with sender metadata) and non-equal addresses', async function () {
+      const parser = new RosettaSDK.Parser();
+
+      const descriptions = new Descriptions({
+        opposite_amounts: [[0, 1]],
+        equal_addresses: [[0, 1]],
+        operation_descriptions: [
+          new OperationDescription({
+            account: new AccountDescription({
+              exists: true,
+              sub_account_exists: true,
+              sub_account_address: 'sub',
+              sub_account_metadata_keys: [
+                { key: 'validator', value_kind: 'string' },
+              ],
+            }),
+            amount: new AmountDescription({
+              exists: true,
+              sign: Sign.Negative,
+            }),
+          }),
+
+          new OperationDescription({ 
+            account: new AccountDescription({ exists: true }),
+            amount: new AmountDescription({
+              exists: true,
+              sign: Sign.Positive,
+            }),            
+          }),            
+        ],
+      });
+
+      const operations = [
+        {
+          account: { address: 'addr2' },
+          amount: { value: '100' },
+        },
+
+        {},
+
+        {
+          account: {
+            address: 'addr1',
+            sub_account: {
+              address: 'sub',
+              metadata: {
+                'validator': '10',
+              },
+            },
+          },
+
+          amount: {
+            value: '-100',
+          },
+        },
+      ];
+
+      const expectedMatches = undefined;
+
+      let matches;
+      let thrown = false;
+
+      try {
+        matches = parser.MatchOperations(descriptions, operations);
+      } catch (e) {
+        // console.error(e);
+        expect(e.name).to.equal('ParserError');
+        expect(e.message).to.equal('addr1 is not equal to addr2');
+        thrown = true;
+      }
+
+      expect(thrown).to.equal(true);
+      expect(c(matches)).to.deep.equal(expectedMatches);
+    }); 
+
+    it('simple transfer (with sender metadata)', async function () {
+      const parser = new RosettaSDK.Parser();
+
+      const descriptions = new Descriptions({
+        opposite_amounts: [[0, 1]],
+        equal_addresses: [[0, 1]],
+        operation_descriptions: [
+          new OperationDescription({
+            account: new AccountDescription({
+              exists: true,
+              sub_account_exists: true,
+              sub_account_address: 'sub',
+              sub_account_metadata_keys: [{
+                key: 'validator',
+                value_kind: 'string',
+              }],
+            }),
+            amount: new AmountDescription({
+              exists: true,
+              sign: Sign.Negative,
+            }),
+          }),
+
+          new OperationDescription({ 
+            account: new AccountDescription({
+              exists: true,
+            }),
+
+            amount: new AmountDescription({
+              exists: true,
+              sign: Sign.Positive,
+            }),            
+          }),            
+        ],
+      });
+
+      const operations = [
+        {
+          account: { address: 'addr1' },
+          amount: { value: '100' },
+        },
+
+        {},
+
+        {
+          account: {
+            address: 'addr1',
+            sub_account: {
+              address: 'sub',
+              metadata: {
+                'validator': '10',
+              }
+            },
+          },
+          amount: { value: '-100' },
+        },
+      ];
+
+      const expectedMatches = [
+        {
+          operations: [{
+            account: {
+              address: 'addr1',
+              sub_account: {
+                address: 'sub',
+                metadata: {
+                  'validator': '10',
+                }
+              },
+            },
+
+            amount: {
+              value: '-100',
+            },            
+          }],
+
+          amounts: [-100],
+        },
+
+        {
+          operations: [{
+            account: { address: 'addr1' },
+            amount: {
+              value: '100',
+            },
+          }],
+
+          amounts: [100],
+        },
+      ];
+
+      let matches;
+
+      try {
+        matches = parser.MatchOperations(descriptions, operations);
+      } catch (e) {
+        console.error(e);
+      }
+
+      expect(c(matches)).to.deep.equal(expectedMatches);
+    });  
+
+    /* Line 699 */  
   });
 });

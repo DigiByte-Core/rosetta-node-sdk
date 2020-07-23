@@ -30,6 +30,7 @@ const RosettaParser = require('./lib/parser');
 const RosettaAsserter = require('./lib/asserter');
 
 const RosettaUtils = require('./lib/utils');
+const RosettaInternalModels = require('./lib/models');
 
 const Errors = require('./lib/errors');
 const RosettaSyncer = require('./lib/syncer');
@@ -76,6 +77,7 @@ module.exports = {
   Parser: RosettaParser,
 
   Utils: RosettaUtils,
+  InternalModels: RosettaInternalModels,
 
   RosettaSyncerEvents,
   Errors,
