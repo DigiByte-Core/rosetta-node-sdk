@@ -27,6 +27,9 @@ const RosettaClient = require('rosetta-client');
 const RosettaFetcher = require('./lib/fetcher');
 const RosettaReconciler = require('./lib/reconciler');
 const RosettaParser = require('./lib/parser');
+const RosettaAsserter = require('./lib/asserter');
+
+const RosettaUtils = require('./lib/utils');
 
 const Errors = require('./lib/errors');
 const RosettaSyncer = require('./lib/syncer');
@@ -64,12 +67,15 @@ class RosettaServer {
 }
 
 module.exports = {
+  Asserter: RosettaAsserter,
   Server: RosettaServer,
   Reconciler: RosettaReconciler,
   Syncer: RosettaSyncer,
   Fetcher: RosettaFetcher,
   Client: RosettaClient,
   Parser: RosettaParser,
+
+  Utils: RosettaUtils,
 
   RosettaSyncerEvents,
   Errors,

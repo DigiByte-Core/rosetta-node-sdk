@@ -22,7 +22,7 @@
 // fetcher.test.js
 const { expect } = require('chai');
 const Rosetta = require('..');
-const { constructPartialBlockIdentifier } = require('../lib/models');
+const { constructPartialBlockIdentifier } = require('../lib/utils');
 const bodyParser = require('body-parser');
 
 let START_PORT = 8000;
