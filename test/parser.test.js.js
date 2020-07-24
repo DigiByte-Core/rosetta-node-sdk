@@ -158,7 +158,7 @@ const createAsserter = (allowedStatuses) => {
 
 describe('Parser', function () {
   describe('Test Balance Changes', function () {
-    it('be able to parse a block', async function () {
+    it('should be able to parse a block', async function () {
       const asserter = createAsserter(defaultStatus);
 
       const parser = new RosettaSDK.Parser({
@@ -201,7 +201,7 @@ describe('Parser', function () {
       expect(changes).to.deep.equal(expectedChanges);
     });
 
-    it('work with an excempt function', async function () {
+    it('should work with an excempt function', async function () {
       const asserter = createAsserter(defaultStatus);
 
       const parser = new RosettaSDK.Parser({
@@ -705,7 +705,7 @@ describe('Parser', function () {
       expect(c(matches)).to.deep.equal(expectedMatches);
     });
 
-    it('simple transfer (with missing account error)', async function () {
+    it('should throw an error when parsing a simple transfer without an account', async function () {
       const parser = new RosettaSDK.Parser();
 
       const descriptions = new Descriptions({
@@ -756,7 +756,7 @@ describe('Parser', function () {
       expect(matches).to.deep.equal(expectedMatches);
     });    
 
-    it('simple transfer (check type)', async function () {
+    it('should match a simple transfer specifiying a type', async function () {
       const parser = new RosettaSDK.Parser();
 
       const descriptions = new Descriptions({
@@ -823,7 +823,7 @@ describe('Parser', function () {
       expect(c(matches)).to.deep.equal(expectedMatches);
     });    
 
-    it('simple transfer (reject extra op)', async function () {
+    it('should reject a simple transfer that has an unmatched description', async function () {
       const parser = new RosettaSDK.Parser();
 
       const descriptions = new Descriptions({
@@ -877,7 +877,7 @@ describe('Parser', function () {
       expect(matches).to.deep.equal(expectedMatches);
     });    
 
-    it('simple transfer (with unequal amounts)', async function () {
+    it('should reject a simple transfer with unequal amounts', async function () {
       const parser = new RosettaSDK.Parser();
 
       const descriptions = new Descriptions({
@@ -933,7 +933,7 @@ describe('Parser', function () {
       expect(matches).to.deep.equal(expectedMatches);
     });    
 
-    it('simple transfer (with equal amounts)', async function () {
+    it('should reject a simple transfer with invalid opposite amounts', async function () {
       const parser = new RosettaSDK.Parser();
 
       const descriptions = new Descriptions({
@@ -980,7 +980,7 @@ describe('Parser', function () {
       expect(matches).to.deep.equal(expectedMatches);
     });    
 
-    it('simple transfer (with currency)', async function () {
+    it('should match a simple transfer using currency', async function () {
       const parser = new RosettaSDK.Parser();
 
       const descriptions = new Descriptions({
@@ -1081,7 +1081,7 @@ describe('Parser', function () {
       expect(c(matches)).to.deep.equal(expectedMatches);
     });    
 
-    it('simple transfer (with missing currency)', async function () {
+    it('should reject to match a simple transfer if it can\'t match the currency', async function () {
       const parser = new RosettaSDK.Parser();
 
       const descriptions = new Descriptions({
@@ -1156,7 +1156,7 @@ describe('Parser', function () {
       expect(c(matches)).to.deep.equal(expectedMatches);
     });   
 
-    it('simple transfer (with sender metadata) and non-equal addresses', async function () {
+    it('should reject a simple transfer (with sender metadata) and non-equal addresses', async function () {
       const parser = new RosettaSDK.Parser();
 
       const descriptions = new Descriptions({
@@ -1231,7 +1231,7 @@ describe('Parser', function () {
       expect(c(matches)).to.deep.equal(expectedMatches);
     }); 
 
-    it('simple transfer (with sender metadata)', async function () {
+    it('should match a simple transfer (using sender metadata)', async function () {
       const parser = new RosettaSDK.Parser();
 
       const descriptions = new Descriptions({
@@ -1333,7 +1333,7 @@ describe('Parser', function () {
       expect(c(matches)).to.deep.equal(expectedMatches);
     });  
 
-    it('simple transfer (with missing sender address metadata)', async function () {
+    it('should reject to match a simple transfer with missing sender address metadata', async function () {
       const parser = new RosettaSDK.Parser();
 
       const descriptions = new Descriptions({
@@ -1400,7 +1400,7 @@ describe('Parser', function () {
       expect(c(matches)).to.deep.equal(expectedMatches);
     });  
 
-    it('nil amount ops', async function () {
+    it('should match nil amount ops', async function () {
       const parser = new RosettaSDK.Parser();
 
       const descriptions = new Descriptions({
@@ -1488,7 +1488,7 @@ describe('Parser', function () {
       expect(c(matches)).to.deep.equal(expectedMatches);
     });   
 
-    it('nil amount ops (force false amount)', async function () {
+    it('should reject to match nil amount ops (force false amount)', async function () {
       const parser = new RosettaSDK.Parser();
 
       const descriptions = new Descriptions({
@@ -1555,7 +1555,7 @@ describe('Parser', function () {
       expect(c(matches)).to.deep.equal(expectedMatches);
     }); 
 
-    it('nil amount ops (only require metadata keys)', async function () {
+    it('should match nil amount ops (only requiring metadata keys)', async function () {
       const parser = new RosettaSDK.Parser();
 
       const descriptions = new Descriptions({
@@ -1646,7 +1646,7 @@ describe('Parser', function () {
       expect(c(matches)).to.deep.equal(expectedMatches);
     });       
   
-    it('nil amount ops (sub account address mismatch)', async function () {
+    it('should reject to match nil amount ops when sub account addresses mismatch', async function () {
       const parser = new RosettaSDK.Parser();
 
       const descriptions = new Descriptions({
@@ -1707,7 +1707,7 @@ describe('Parser', function () {
       expect(c(matches)).to.deep.equal(expectedMatches);
     }); 
 
-    it('nil descriptions', async function () {
+    it('should reject to match nil descriptions', async function () {
       const parser = new RosettaSDK.Parser();
 
       const descriptions = new Descriptions({
@@ -1751,7 +1751,7 @@ describe('Parser', function () {
       expect(c(matches)).to.deep.equal(expectedMatches);
     });   
 
-    it('two empty descriptions', async function () {
+    it('should match two empty descriptions', async function () {
       const parser = new RosettaSDK.Parser();
 
       const descriptions = new Descriptions({
@@ -1818,7 +1818,7 @@ describe('Parser', function () {
       expect(c(matches)).to.deep.equal(expectedMatches);
     }); 
 
-    it('empty operations', async function () {
+    it('should reject to match empty operations', async function () {
       const parser = new RosettaSDK.Parser();
 
       const descriptions = new Descriptions({
@@ -1848,7 +1848,7 @@ describe('Parser', function () {
       expect(c(matches)).to.deep.equal(expectedMatches);
     });     
 
-    it('simple repeated op', async function () {
+    it('should match simple repeated op', async function () {
       const parser = new RosettaSDK.Parser();
 
       const descriptions = new Descriptions({
@@ -1926,7 +1926,7 @@ describe('Parser', function () {
       expect(c(matches)).to.deep.equal(expectedMatches);
     }); 
 
-    it('simple repeated op (no extra ops allowed)', async function () {
+    it('should reject to match simple repeated op, when unmatched are not allowed', async function () {
       const parser = new RosettaSDK.Parser();
 
       const descriptions = new Descriptions({
@@ -1988,7 +1988,7 @@ describe('Parser', function () {
       expect(c(matches)).to.deep.equal(expectedMatches);
     });
 
-    it('simple repeated op (with invalid comparison indexes)', async function () {
+    it('should reject to match simple repeated op with invalid comparison indexes', async function () {
       const parser = new RosettaSDK.Parser();
 
       const descriptions = new Descriptions({
@@ -2048,7 +2048,7 @@ describe('Parser', function () {
       expect(c(matches)).to.deep.equal(expectedMatches);
     });
 
-    it('simple repeated op (with overlapping, repeated descriptions)', async function () {
+    it('should reject to match simple repeated op with overlapping, repeated descriptions', async function () {
       const parser = new RosettaSDK.Parser();
 
       const descriptions = new Descriptions({
@@ -2121,7 +2121,7 @@ describe('Parser', function () {
       expect(c(matches)).to.deep.equal(expectedMatches);
     });
 
-    it('complex repeated op', async function () {
+    it('should match complex repeated ops', async function () {
       const parser = new RosettaSDK.Parser();
 
       const descriptions = new Descriptions({
@@ -2252,7 +2252,7 @@ describe('Parser', function () {
       expect(c(matches)).to.deep.equal(expectedMatches);
     });    
 
-    it('optional description not met', async function () {
+    it('should match an optional description, that is not met', async function () {
       const parser = new RosettaSDK.Parser();
 
       const descriptions = new Descriptions({
@@ -2325,7 +2325,7 @@ describe('Parser', function () {
       expect(c(matches)).to.deep.equal(expectedMatches);
     });   
 
-   it('optional description equal amounts not found', async function () {
+   it('should reject to match an optional description when equal amounts were not found', async function () {
       const parser = new RosettaSDK.Parser();
 
       const descriptions = new Descriptions({
@@ -2389,7 +2389,7 @@ describe('Parser', function () {
       expect(c(matches)).to.deep.equal(expectedMatches);
     });   
 
-    it('optional description opposite amounts not found', async function () {
+    it('should reject to match an optional description when opposite amounts were not found', async function () {
       const parser = new RosettaSDK.Parser();
 
       const descriptions = new Descriptions({
@@ -2455,7 +2455,7 @@ describe('Parser', function () {
   });
 
   describe('Test Match', function () {
-    it('empty match', async function () {
+    it('should handle an empty match correctly', async function () {
       const op = null;
       const amount = null;
       const match = new RosettaSDK.Parser.Match({}).first();
@@ -2464,7 +2464,7 @@ describe('Parser', function () {
       expect(match.amount).to.deep.equal(amount);
     });
 
-    it('single op match', async function () {
+    it('should handle a single op match', async function () {
       const op = {
         operation_identifier: { index: 1 },
       };
@@ -2483,7 +2483,7 @@ describe('Parser', function () {
       expect(match.amount).to.deep.equal(amount);
     });
 
-    it('multi op match', async function () {
+    it('should handle multi op match properly', async function () {
       const op = {
         operation_identifier: { index: 1 },
       };
@@ -2504,7 +2504,7 @@ describe('Parser', function () {
       expect(match.amount).to.deep.equal(amount);
     });
 
-    it('multi op match with null amount', async function () {
+    it('should handle multi op match with null amount correctly', async function () {
       const op = {
         operation_identifier: { index: 1 },
       };
