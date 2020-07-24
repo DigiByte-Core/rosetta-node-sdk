@@ -750,7 +750,7 @@ describe('Parser', function () {
       } catch (e) {
         // console.error(e);
         expect(e.name).to.equal('ParserError');
-        expect(e.message).to.equal('account is null');
+        expect(e.message).to.equal('account is null: operation addresses are not equal: group descriptions not met');
       }
 
       expect(matches).to.deep.equal(expectedMatches);
@@ -925,7 +925,7 @@ describe('Parser', function () {
       } catch (e) {
         //console.error(e);
         expect(e.name).to.equal('ParserError');
-        expect(e.message).to.equal('100 is not equal to -100');
+        expect(e.message).to.equal('100 is not equal to -100: operation amounts are not equal: group descriptions not met');
         thrown = true;
       }
 
@@ -974,7 +974,7 @@ describe('Parser', function () {
       } catch (e) {
         //console.error(e);
         expect(e.name).to.equal('ParserError');
-        expect(e.message).to.equal('100 and 100 have the same sign');
+        expect(e.message).to.equal('100 and 100 have the same sign: group descriptions not met');
       }
 
       expect(matches).to.deep.equal(expectedMatches);
@@ -1223,7 +1223,7 @@ describe('Parser', function () {
       } catch (e) {
         // console.error(e);
         expect(e.name).to.equal('ParserError');
-        expect(e.message).to.equal('addr1 is not equal to addr2');
+        expect(e.message).to.equal('addr1 is not equal to addr2: operation addresses are not equal: group descriptions not met');
         thrown = true;
       }
 
@@ -1333,6 +1333,1195 @@ describe('Parser', function () {
       expect(c(matches)).to.deep.equal(expectedMatches);
     });  
 
-    /* Line 699 */  
+    it('simple transfer (with missing sender address metadata)', async function () {
+      const parser = new RosettaSDK.Parser();
+
+      const descriptions = new Descriptions({
+        opposite_amounts: [[0, 1]],
+        operation_descriptions: [
+          new OperationDescription({
+            account: new AccountDescription({
+              exists: true,
+              sub_account_exists: true,
+              sub_account_address: 'sub',
+              sub_account_metadata_keys: [{
+                key: 'validator',
+                value_kind: 'string',
+              }],
+            }),
+            amount: new AmountDescription({
+              exists: true,
+              sign: Sign.Negative,
+            }),
+          }),
+
+          new OperationDescription({ 
+            account: new AccountDescription({
+              exists: true,
+            }),
+
+            amount: new AmountDescription({
+              exists: true,
+              sign: Sign.Positive,
+            }),            
+          }),            
+        ],
+      });
+
+      const operations = [
+        {
+          account: { address: 'addr2' },
+          amount: { value: '100' },
+        },
+
+        {},
+
+        {
+          account: { address: 'addr1' },
+          amount: { value: '-100' },
+        },
+      ];
+
+      const expectedMatches = undefined;
+
+      let matches;
+      let thrown = false;
+
+      try {
+        matches = parser.MatchOperations(descriptions, operations);
+      } catch (e) {
+        // console.error(e);
+        expect(e.name).to.equal('ParserError');
+        expect(e.message).to.equal('Could not find match for description 0');
+        thrown = true;
+      }
+
+      expect(thrown).to.equal(true);
+      expect(c(matches)).to.deep.equal(expectedMatches);
+    });  
+
+    it('nil amount ops', async function () {
+      const parser = new RosettaSDK.Parser();
+
+      const descriptions = new Descriptions({
+        operation_descriptions: [
+          new OperationDescription({
+            account: new AccountDescription({
+              exists: true,
+              sub_account_exists: true,
+              sub_account_address: 'sub 2',
+            }),
+          }),
+
+          new OperationDescription({ 
+            account: new AccountDescription({
+              exists: true,
+              sub_account_exists: true,
+              sub_account_address: 'sub 1',
+            }),
+          }),            
+        ],
+      });
+
+      const operations = [
+        {
+          account: {
+            address: 'addr1',
+            sub_account: {
+              address: 'sub 1',
+            },
+          },
+        },
+
+        {
+          account: {
+            address: 'addr2',
+            sub_account: {
+              address: 'sub 2',
+            },
+          },
+
+          amount: { value: '100' }, // allowed because no amount requirement provided
+        },
+      ];
+
+      const expectedMatches = [
+        {
+          operations: [{
+            account: {
+              address: 'addr2',
+              sub_account: {
+                address: 'sub 2',
+              },
+            },
+
+            amount: {
+              value: '100',
+            },            
+          }],
+
+          amounts: [100],
+        },
+
+        {
+          operations: [{
+            account: {
+              address: 'addr1',
+              sub_account: {
+                address: 'sub 1',
+              },
+            },
+          }],
+
+          amounts: [null],
+        },
+      ];
+
+      let matches;
+
+      try {
+        matches = parser.MatchOperations(descriptions, operations);
+      } catch (e) {
+        console.error(e);
+      }
+
+      expect(c(matches)).to.deep.equal(expectedMatches);
+    });   
+
+    it('nil amount ops (force false amount)', async function () {
+      const parser = new RosettaSDK.Parser();
+
+      const descriptions = new Descriptions({
+        operation_descriptions: [
+          new OperationDescription({
+            account: new AccountDescription({
+              exists: true,
+              sub_account_exists: true,
+              sub_account_address: 'sub 2',
+            }),
+
+            amount: new AmountDescription({
+              exists: false,
+            }),
+          }),
+
+          new OperationDescription({ 
+            account: new AccountDescription({
+              exists: true,
+              sub_account_exists: true,
+              sub_account_address: 'sub 1',
+            }),
+          }),            
+        ],
+      });
+
+      const operations = [
+        {
+          account: {
+            address: 'addr1',
+            sub_account: {
+              address: 'sub 1',
+            },
+          },
+        },
+
+        {
+          account: {
+            address: 'addr2',
+            sub_account: {
+              address: 'sub 2',
+            },
+          },
+
+          amount: {}, // allowed because no amount requirement provided
+        },
+      ];
+
+      const expectedMatches = undefined;
+
+      let matches;
+      let thrown;
+
+      try {
+        matches = parser.MatchOperations(descriptions, operations);
+      } catch (e) {
+        // console.error(e);
+        expect(e.name).to.equal('ParserError');
+        expect(e.message).to.equal('Could not find match for description 0');
+        thrown = true;
+      }
+
+      expect(thrown).to.equal(true);
+      expect(c(matches)).to.deep.equal(expectedMatches);
+    }); 
+
+    it('nil amount ops (only require metadata keys)', async function () {
+      const parser = new RosettaSDK.Parser();
+
+      const descriptions = new Descriptions({
+        operation_descriptions: [
+          new OperationDescription({
+            account: new AccountDescription({
+              exists: true,
+              sub_account_exists: true,
+              sub_account_address: 'sub 2',
+            }),
+          }),
+
+          new OperationDescription({ 
+            account: new AccountDescription({
+              exists: true,
+              sub_account_exists: true,
+              sub_account_metadata_keys: [{
+                key: 'validator',
+                value_kind: 'number',
+              }],
+            }),
+          }),            
+        ],
+      });
+
+      const operations = [
+        {
+          account: {
+            address: 'addr1',
+            sub_account: {
+              address: 'sub 1',
+              metadata: {
+                validator: -1000,
+              }
+            },
+          },
+        },
+
+        {
+          account: {
+            address: 'addr2',
+            sub_account: {
+              address: 'sub 2',
+            },
+          },
+        },
+      ];
+
+      const expectedMatches = [
+        {
+          operations: [{
+            account: {
+              address: 'addr2',
+              sub_account: {
+                address: 'sub 2',
+              },
+            },       
+          }],
+
+          amounts: [null],
+        },
+
+        {
+          operations: [{
+            account: {
+              address: 'addr1',
+              sub_account: {
+                address: 'sub 1',
+                metadata: {
+                  validator: -1000,
+                },
+              },
+            },
+          }],
+
+          amounts: [null],
+        },
+      ];
+
+      let matches;
+
+      try {
+        matches = parser.MatchOperations(descriptions, operations);
+      } catch (e) {
+        console.error(e);
+      }
+
+      expect(c(matches)).to.deep.equal(expectedMatches);
+    });       
+  
+    it('nil amount ops (sub account address mismatch)', async function () {
+      const parser = new RosettaSDK.Parser();
+
+      const descriptions = new Descriptions({
+        operation_descriptions: [
+          new OperationDescription({
+            account: new AccountDescription({
+              exists: true,
+              sub_account_exists: true,
+              sub_account_address: 'sub 2',
+            }),
+          }),
+
+          new OperationDescription({ 
+            account: new AccountDescription({
+              exists: true,
+              sub_account_exists: true,
+              sub_account_address: 'sub 1',
+            }),
+          }),            
+        ],
+      });
+
+      const operations = [
+        {
+          account: {
+            address: 'addr1',
+            sub_account: {
+              address: 'sub 3',
+            },
+          },
+        },
+
+        {
+          account: {
+            address: 'addr2',
+            sub_account: {
+              address: 'sub 2',
+            },
+          },
+        },
+      ];
+
+      const expectedMatches = undefined;
+
+      let matches;
+      let thrown = false;
+
+      try {
+        matches = parser.MatchOperations(descriptions, operations);
+      } catch (e) {
+        // console.error(e);
+        expect(e.name).to.equal('ParserError');
+        expect(e.message).to.equal('Could not find match for description 1');
+        thrown = true;
+      }
+
+      expect(thrown).to.equal(true);
+      expect(c(matches)).to.deep.equal(expectedMatches);
+    }); 
+
+    it('nil descriptions', async function () {
+      const parser = new RosettaSDK.Parser();
+
+      const descriptions = new Descriptions({
+      });
+
+      const operations = [
+        {
+          account: {
+            address: 'addr1',
+            sub_account: {
+              address: 'sub 3',
+            },
+          },
+        },
+
+        {
+          account: {
+            address: 'addr2',
+            sub_account: {
+              address: 'sub 2',
+            },
+          },
+        },
+      ];
+
+      const expectedMatches = undefined;
+
+      let matches;
+      let thrown = false;
+
+      try {
+        matches = parser.MatchOperations(descriptions, operations);
+      } catch (e) {
+        // console.error(e);
+        expect(e.name).to.equal('ParserError');
+        expect(e.message).to.equal('No descriptions to match');
+        thrown = true;
+      }
+
+      expect(thrown).to.equal(true);
+      expect(c(matches)).to.deep.equal(expectedMatches);
+    });   
+
+    it('two empty descriptions', async function () {
+      const parser = new RosettaSDK.Parser();
+
+      const descriptions = new Descriptions({
+        operation_descriptions: [
+          new OperationDescription({}),
+          new OperationDescription({}),            
+        ],
+      });
+
+      const operations = [
+        {
+          account: {
+            address: 'addr1',
+            sub_account: {
+              address: 'sub 3',
+            },
+          },
+        },
+
+        {
+          account: {
+            address: 'addr2',
+            sub_account: {
+              address: 'sub 2',
+            },
+          },
+        },
+      ];
+
+      const expectedMatches = [
+        {
+          operations: [{
+            account: {
+              address: 'addr1',
+              sub_account: {
+                address: 'sub 3',
+              },
+            },
+          }],
+          amounts: [null],  
+        },
+
+        {
+          operations: [{
+            account: {
+              address: 'addr2',
+              sub_account: {
+                address: 'sub 2',
+              },
+            }
+          }],
+          amounts: [null],  
+        },
+      ];;
+
+      let matches;
+
+      try {
+        matches = parser.MatchOperations(descriptions, operations);
+      } catch (e) {
+        console.error(e);
+      }
+
+      expect(c(matches)).to.deep.equal(expectedMatches);
+    }); 
+
+    it('empty operations', async function () {
+      const parser = new RosettaSDK.Parser();
+
+      const descriptions = new Descriptions({
+        operation_descriptions: [
+          new OperationDescription({}),
+          new OperationDescription({}),            
+        ],
+      });
+
+      const operations = [];
+
+      const expectedMatches = undefined;
+
+      let matches;
+      let thrown = false;
+
+      try {
+        matches = parser.MatchOperations(descriptions, operations);
+      } catch (e) {
+        // console.error(e);
+        thrown = true;
+        expect(e.name).to.equal('ParserError');
+        expect(e.message).to.equal('Unable to match anything to zero operations');
+      }
+
+      expect(thrown).to.equal(true);
+      expect(c(matches)).to.deep.equal(expectedMatches);
+    });     
+
+    it('simple repeated op', async function () {
+      const parser = new RosettaSDK.Parser();
+
+      const descriptions = new Descriptions({
+        operation_descriptions: [
+          new OperationDescription({
+            account: new AccountDescription({
+              exists: true,
+            }),
+
+            amount: new AmountDescription({
+              exists: true,
+              sign: Sign.Positive,
+            }),
+
+            allow_repeats: true,
+          }),
+        ],
+      });
+
+      const operations = [
+        {
+          account: {
+            address: 'addr2',
+          },
+
+          amount: {
+            value: '200',
+          },
+        },
+        {},
+        {
+          account: {
+            address: 'addr1',
+          },
+          amount: {
+            value: '100',
+          },          
+        },
+      ];
+
+      const expectedMatches = [
+        {
+          operations: [{
+            account: {
+              address: 'addr2',
+            },
+
+            amount: {
+              value: '200',
+            },
+          },
+
+          {
+            account: {
+              address: 'addr1',
+            },
+
+            amount: {
+              value: '100',
+            },
+          }],
+
+          amounts: [200, 100],  
+        },
+      ];
+
+      let matches;
+
+      try {
+        matches = parser.MatchOperations(descriptions, operations);
+      } catch (e) {
+        console.error(e);
+      }
+
+      expect(c(matches)).to.deep.equal(expectedMatches);
+    }); 
+
+    it('simple repeated op (no extra ops allowed)', async function () {
+      const parser = new RosettaSDK.Parser();
+
+      const descriptions = new Descriptions({
+        operation_descriptions: [
+          new OperationDescription({
+            account: new AccountDescription({
+              exists: true,
+            }),
+
+            amount: new AmountDescription({
+              exists: true,
+              sign: Sign.Positive,
+            }),
+
+            allow_repeats: true,
+          }),
+        ],
+
+        err_unmatched: true,
+      });
+
+      const operations = [
+        {
+          account: {
+            address: 'addr2',
+          },
+
+          amount: {
+            value: '200',
+          },
+        },
+        {},
+        {
+          account: {
+            address: 'addr1',
+          },
+          amount: {
+            value: '100',
+          },          
+        },
+      ];
+
+      const expectedMatches = undefined;
+
+      let matches;
+      let thrown = false;
+
+      try {
+        matches = parser.MatchOperations(descriptions, operations);
+        
+      } catch (e) {
+        // console.error(e);
+        expect(e.name).to.equal('ParserError');
+        expect(e.message).to.equal('Unable to find match for operation at index 1');
+        thrown = true;
+      }
+
+      expect(thrown).to.equal(true);
+      expect(c(matches)).to.deep.equal(expectedMatches);
+    });
+
+    it('simple repeated op (with invalid comparison indexes)', async function () {
+      const parser = new RosettaSDK.Parser();
+
+      const descriptions = new Descriptions({
+        opposite_amounts: [[0, 1]],
+        operation_descriptions: [
+          new OperationDescription({
+            account: new AccountDescription({
+              exists: true,
+            }),
+
+            amount: new AmountDescription({
+              exists: true,
+              sign: Sign.Positive,
+            }),
+
+            allow_repeats: true,
+          }),
+        ],
+      });
+
+      const operations = [
+        {
+          account: {
+            address: 'addr2',
+          },
+
+          amount: {
+            value: '200',
+          },
+        },
+        {},
+        {
+          account: {
+            address: 'addr1',
+          },
+          amount: {
+            value: '100',
+          },          
+        },
+      ];
+
+      const expectedMatches = undefined;
+
+      let matches;
+      let thrown = false;
+
+      try {
+        matches = parser.MatchOperations(descriptions, operations);
+        
+      } catch (e) {
+        expect(e.name).to.equal('ParserError');
+        expect(e.message).to.equal('Match index 1 out of range: opposite amounts comparison error: group descriptions not met');
+        thrown = true;
+      }
+
+      expect(thrown).to.equal(true);
+      expect(c(matches)).to.deep.equal(expectedMatches);
+    });
+
+    it('simple repeated op (with overlapping, repeated descriptions)', async function () {
+      const parser = new RosettaSDK.Parser();
+
+      const descriptions = new Descriptions({
+        operation_descriptions: [
+          new OperationDescription({
+            account: new AccountDescription({
+              exists: true,
+            }),
+
+            amount: new AmountDescription({
+              exists: true,
+              sign: Sign.Positive,
+            }),
+
+            allow_repeats: true,
+          }),
+
+          new OperationDescription({ // this description should never be matched.
+            account: new AccountDescription({
+              exists: true,
+            }),
+
+            amount: new AmountDescription({
+              exists: true,
+              sign: Sign.Positive,
+            }),
+
+            allow_repeats: true,
+          }),          
+        ],
+      });
+
+      const operations = [
+        {
+          account: {
+            address: 'addr2',
+          },
+
+          amount: {
+            value: '200',
+          },
+        },
+        {},
+        {
+          account: {
+            address: 'addr1',
+          },
+          amount: {
+            value: '100',
+          },          
+        },
+      ];
+
+      const expectedMatches = undefined;
+
+      let matches;
+      let thrown = false;
+
+      try {
+        matches = parser.MatchOperations(descriptions, operations);
+        
+      } catch (e) {
+        // console.error(e);
+        expect(e.name).to.equal('ParserError');
+        expect(e.message).to.equal('Could not find match for description 1');
+        thrown = true;
+      }
+
+      expect(thrown).to.equal(true);
+      expect(c(matches)).to.deep.equal(expectedMatches);
+    });
+
+    it('complex repeated op', async function () {
+      const parser = new RosettaSDK.Parser();
+
+      const descriptions = new Descriptions({
+        operation_descriptions: [
+          new OperationDescription({
+            account: new AccountDescription({
+              exists: true,
+            }),
+
+            amount: new AmountDescription({
+              exists: true,
+              sign: Sign.Positive,
+            }),
+
+            allow_repeats: true,
+            type: 'output',
+          }),
+
+          new OperationDescription({ // this description should never be matched.
+            account: new AccountDescription({
+              exists: true,
+            }),
+
+            amount: new AmountDescription({
+              exists: true,
+              sign: Sign.Negative,
+            }),
+
+            allow_repeats: true,
+            type: 'input',
+          }),    
+
+          new OperationDescription({ // this description should never be matched.
+            account: new AccountDescription({
+              exists: true,
+            }),
+
+            amount: new AmountDescription({
+              exists: true,
+              sign: Sign.Negative,
+            }),
+
+            allow_repeats: true,
+          }),    
+        ],
+      });
+
+      const operations = [
+        {
+          account: { address: 'addr2' },
+          amount: { value: '200' },
+          type: 'output',
+        },
+        {
+          account: { address: 'addr3' },
+          amount: { value: '200' },
+          type: 'output',
+        },
+        {
+          account: { address: 'addr1' },
+          amount: { value: '-200' },
+          type: 'input',
+        },    
+
+        {
+          account: { address: 'addr4' },
+          amount: { value: '-200' },
+          type: 'input',
+        },
+
+        {
+          account: { address: 'addr5' },
+          amount: { value: '-1000' },
+          type: 'runoff',
+        },        
+      ];
+
+      const expectedMatches = [
+        {
+          operations: [{
+            account: { address: 'addr2' },
+            amount: { value: '200' },
+            type: 'output',
+          },
+          {
+            account: { address: 'addr3' },
+            amount: { value: '200' },
+            type: 'output',
+          }],
+
+          amounts: [200, 200]
+        },  
+
+        {
+          operations: [{
+            account: { address: 'addr1' },
+            amount: { value: '-200' },
+            type: 'input',
+          },
+          {
+            account: { address: 'addr4' },
+            amount: { value: '-200' },
+            type: 'input',
+          }],
+
+          amounts: [-200, -200]
+        },     
+
+        {
+          operations: [{
+            account: { address: 'addr5' },
+            amount: { value: '-1000' },
+            type: 'runoff',
+          }],
+
+          amounts: [-1000]
+        },   
+      ];
+
+      let matches;
+
+      try {
+        matches = parser.MatchOperations(descriptions, operations);
+      } catch (e) {
+        console.error(e);
+      }
+
+      expect(c(matches)).to.deep.equal(expectedMatches);
+    });    
+
+    it('optional description not met', async function () {
+      const parser = new RosettaSDK.Parser();
+
+      const descriptions = new Descriptions({
+        operation_descriptions: [
+          new OperationDescription({
+            account: new AccountDescription({
+              exists: true,
+            }),
+
+            amount: new AmountDescription({
+              exists: true,
+              sign: Sign.Positive,
+            }),
+
+            allow_repeats: true,
+          }),
+
+          new OperationDescription({ // this description should never be matched.
+            account: new AccountDescription({
+              exists: true,
+            }),
+
+            amount: new AmountDescription({
+              exists: true,
+              sign: Sign.Negative,
+            }),
+
+            optional: true,
+          }),
+        ],
+      });
+
+      const operations = [
+        {
+          account: { address: 'addr2' },
+          amount: { value: '200' },
+        },
+        {},
+        {
+          account: { address: 'addr1' },
+          amount: { value: '100' },
+        },
+      ];
+
+      const expectedMatches = [
+        {
+          operations: [{
+            account: { address: 'addr2' },
+            amount: { value: '200' },
+          },
+          {
+            account: { address: 'addr1' },
+            amount: { value: '100' },
+          }],
+
+          amounts: [200, 100]
+        },
+
+        null, // optional not met, must not throw
+      ];
+
+      let matches;
+
+      try {
+        matches = parser.MatchOperations(descriptions, operations);
+      } catch (e) {
+        console.error(e);
+      }
+
+      expect(c(matches)).to.deep.equal(expectedMatches);
+    });   
+
+   it('optional description equal amounts not found', async function () {
+      const parser = new RosettaSDK.Parser();
+
+      const descriptions = new Descriptions({
+        equal_amounts: [[0, 1]],
+        operation_descriptions: [
+          new OperationDescription({
+            account: new AccountDescription({
+              exists: true,
+            }),
+
+            amount: new AmountDescription({
+              exists: true,
+              sign: Sign.Positive,
+            }),
+
+            allow_repeats: true,
+          }),
+
+          new OperationDescription({ // this description should never be matched.
+            account: new AccountDescription({
+              exists: true,
+            }),
+
+            amount: new AmountDescription({
+              exists: true,
+              sign: Sign.Negative,
+            }),
+
+            optional: true,
+          }),
+        ],
+      });
+
+      const operations = [
+        {
+          account: { address: 'addr2' },
+          amount: { value: '200' },
+        },
+        {},
+        {
+          account: { address: 'addr1' },
+          amount: { value: '100' },
+        },
+      ];
+
+      const expectedMatches = undefined;
+
+      let matches;
+      let thrown = false;
+
+      try {
+        matches = parser.MatchOperations(descriptions, operations);
+      } catch (e) {
+        // console.error(e);
+        expect(e.name).to.equal('ParserError');
+        expect(e.message).to.equal('Match index 1 is null: index 1 not valid: operation amounts are not equal: group descriptions not met');
+        thrown = true;
+      }
+
+      expect(thrown).to.equal(true);
+      expect(c(matches)).to.deep.equal(expectedMatches);
+    });   
+
+    it('optional description opposite amounts not found', async function () {
+      const parser = new RosettaSDK.Parser();
+
+      const descriptions = new Descriptions({
+        opposite_amounts: [[0, 1]],
+        operation_descriptions: [
+          new OperationDescription({
+            account: new AccountDescription({
+              exists: true,
+            }),
+
+            amount: new AmountDescription({
+              exists: true,
+              sign: Sign.Positive,
+            }),
+
+            allow_repeats: true,
+          }),
+
+          new OperationDescription({ // this description should never be matched.
+            account: new AccountDescription({
+              exists: true,
+            }),
+
+            amount: new AmountDescription({
+              exists: true,
+              sign: Sign.Negative,
+            }),
+
+            optional: true,
+          }),
+        ],
+      });
+
+      const operations = [
+        {
+          account: { address: 'addr2' },
+          amount: { value: '200' },
+        },
+        {},
+        {
+          account: { address: 'addr1' },
+          amount: { value: '100' },
+        },
+      ];
+
+      const expectedMatches = undefined;
+
+      let matches;
+      let thrown = false;
+
+      try {
+        matches = parser.MatchOperations(descriptions, operations);
+      } catch (e) {
+        // console.error(e);
+        expect(e.name).to.equal('ParserError');
+        expect(e.message).to.equal('Match index 1 is null: opposite amounts comparison error: group descriptions not met');
+        thrown = true;
+      }
+
+      expect(thrown).to.equal(true);
+      expect(c(matches)).to.deep.equal(expectedMatches);
+    });   
+  });
+
+  describe('Test Match', function () {
+    it('empty match', async function () {
+      const op = null;
+      const amount = null;
+      const match = new RosettaSDK.Parser.Match({}).first();
+
+      expect(match.operation).to.deep.equal(op);
+      expect(match.amount).to.deep.equal(amount);
+    });
+
+    it('single op match', async function () {
+      const op = {
+        operation_identifier: { index: 1 },
+      };
+
+      const amount = 100;
+
+      const match = new RosettaSDK.Parser.Match({
+        operations: [{
+          operation_identifier: { index: 1 },
+        }],
+
+        amounts: [100],
+      }).first();
+
+      expect(match.operation).to.deep.equal(op);
+      expect(match.amount).to.deep.equal(amount);
+    });
+
+    it('multi op match', async function () {
+      const op = {
+        operation_identifier: { index: 1 },
+      };
+
+      const amount = 100;
+
+      const match = new RosettaSDK.Parser.Match({
+        operations: [{
+          operation_identifier: { index: 1 },
+        }, {
+          operation_identifier: { index: 2 },
+        }],
+
+        amounts: [100, 200],
+      }).first();
+
+      expect(match.operation).to.deep.equal(op);
+      expect(match.amount).to.deep.equal(amount);
+    });
+
+    it('multi op match with null amount', async function () {
+      const op = {
+        operation_identifier: { index: 1 },
+      };
+
+      const amount = null;
+
+      const match = new RosettaSDK.Parser.Match({
+        operations: [{
+          operation_identifier: { index: 1 },
+        }],
+
+        amounts: [null],
+      }).first();
+
+      expect(match.operation).to.deep.equal(op);
+      expect(match.amount).to.deep.equal(amount);
+    });
+
   });
 });
