@@ -263,6 +263,575 @@ describe('Asserter Tests', function () {
     } 
   });
 
+  describe('Block Tests', function () {
+    const asserter = new RosettaSDK.Asserter();
+
+    it('should successfully validate a block', async function () {
+      let thrown = false;
+
+      try {
+        const block = new RosettaSDK.Client.BlockIdentifier(1, 'block 1');
+        asserter.BlockIdentifier(block);
+      } catch (e) {
+        console.error(e);
+        thrown = true; 
+      }
+
+      expect(thrown).to.equal(false);
+    });
+
+    it('should fail when blockidentifier is null', async function () {
+      let thrown = false;
+
+      try {
+        const block = null;
+        asserter.BlockIdentifier(block);
+      } catch (e) {
+        // console.error(e);
+        expect(e.name).to.equal('AsserterError');
+        expect(e.message).to.equal('BlockIdentifier is null');
+        thrown = true; 
+      }
+
+      expect(thrown).to.equal(true);
+    });
+
+    it('should fail due to a negative index', async function () {
+      let thrown = false;
+
+      try {
+        const block = new RosettaSDK.Client.BlockIdentifier(-1, 'block 1');
+        asserter.BlockIdentifier(block);
+      } catch (e) {
+        // console.error(e);
+        expect(e.name).to.equal('AsserterError');
+        expect(e.message).to.equal('BlockIdentifier.index is negative');
+        thrown = true; 
+      }
+
+      expect(thrown).to.equal(true);
+    });
+
+    it('should detect an invalid block hash', async function () {
+      let thrown = false;
+
+      try {
+        const block = new RosettaSDK.Client.BlockIdentifier(1, '');
+        asserter.BlockIdentifier(block);
+      } catch (e) {
+        // console.error(e);
+        expect(e.name).to.equal('AsserterError');
+        expect(e.message).to.equal('BlockIdentifier.hash is missing');
+        thrown = true; 
+      }
+
+      expect(thrown).to.equal(true);
+    });
+  });
+
+  describe('Test Amount', function () {
+    const asserter = new RosettaSDK.Asserter();
+    const { Amount, Currency } = RosettaSDK.Client;
+
+    it('should correctly handle a valid amount', async function () {
+      let thrown = false;
+
+      try {
+        const amount = new Amount('100000', new Currency('BTC', 1));
+        asserter.Amount(amount);
+      } catch (e) {
+        console.error(e);
+        thrown = true; 
+      }
+
+      expect(thrown).to.equal(false);
+    });
+
+    it('should correctly handle a valid amount with no decimals', async function () {
+      let thrown = false;
+
+      try {
+        const amount = new Amount('100000', new Currency('BTC'));
+        asserter.Amount(amount);
+      } catch (e) {
+        console.error(e);
+        thrown = true; 
+      }
+
+      expect(thrown).to.equal(false);
+    });
+
+    it('should correctly handle a negative amount', async function () {
+      let thrown = false;
+
+      try {
+        const amount = new Amount('-100000', new Currency('BTC', 1));
+        asserter.Amount(amount);
+      } catch (e) {
+        console.error(e);
+        thrown = true; 
+      }
+
+      expect(thrown).to.equal(false);
+    });
+
+    it('should throw when having detecting no amount', async function () {
+      let thrown = false;
+
+      try {
+        const amount = null;
+        asserter.Amount(amount);
+      } catch (e) {
+        // console.error(e);
+        expect(e.name).to.equal('AsserterError');
+        expect(e.message).to.equal('Amount.value is missing');
+        thrown = true; 
+      }
+
+      expect(thrown).to.equal(true);
+    });    
+
+    it('should throw when currency is missing', async function () {
+      let thrown = false;
+
+      try {
+        const amount = new Amount('100000', null);
+        asserter.Amount(amount);
+      } catch (e) {
+        // console.error(e);
+        expect(e.name).to.equal('AsserterError');
+        expect(e.message).to.equal('Amount.currency is null');
+        thrown = true; 
+      }
+
+      expect(thrown).to.equal(true);
+    });       
+
+    it('should throw if amount.value is not a number', async function () {
+      let thrown = false;
+
+      try {
+        const amount = new Amount('xxxx', new Currency('BTC', 1));
+        asserter.Amount(amount);
+      } catch (e) {
+        // console.error(e);
+        expect(e.name).to.equal('AsserterError');
+        expect(e.message).to.equal('Amount.value is not an integer: xxxx');
+        thrown = true; 
+      }
+
+      expect(thrown).to.equal(true);
+    });  
+
+    it('should throw when detecting a non-int', async function () {
+      let thrown = false;
+
+      try {
+        const amount = new Amount('1.1', new Currency('BTC', 1));
+        asserter.Amount(amount);
+      } catch (e) {
+        // console.error(e);
+        expect(e.name).to.equal('AsserterError');
+        expect(e.message).to.equal('Amount.value is not an integer: 1.1');
+        thrown = true; 
+      }
+
+      expect(thrown).to.equal(true);
+    });   
+
+    it('should throw when passing an invalid symbol', async function () {
+      let thrown = false;
+
+      try {
+        const amount = new Amount('11', new Currency(null, 1));
+        asserter.Amount(amount);
+      } catch (e) {
+        // console.error(e);
+        expect(e.name).to.equal('AsserterError');
+        expect(e.message).to.equal('Amount.currency does not have a symbol');
+        thrown = true; 
+      }
+
+      expect(thrown).to.equal(true);      
+    });     
+
+    it('should throw when detecting invalid decimals', async function () {
+      let thrown = false;
+
+      try {
+        const amount = new Amount('111', new Currency('BTC', -1));
+        asserter.Amount(amount);
+      } catch (e) {
+        // console.error(e);
+        expect(e.name).to.equal('AsserterError');
+        expect(e.message).to.equal('Amount.currency.decimals must be positive. Found: -1');
+        thrown = true; 
+      }
+
+      expect(thrown).to.equal(true); 
+    });     
+  });
+
+  describe('Test OperationIdentifier', function () {
+    const asserter = new RosettaSDK.Asserter();
+    const { OperationIdentifier } = RosettaSDK.Client;
+
+    const validNetworkIndex = 1;
+    const invalidNetworkIndex = -1;
+
+    it('should assert a valid identifier', async function () {
+      let thrown = false;
+
+      try {
+        const opId = new OperationIdentifier(0);
+        const index = 0;
+        asserter.OperationIdentifier(opId, index);
+      } catch (e) {
+        console.error(e);
+        thrown = true; 
+      }
+
+      expect(thrown).to.equal(false);       
+    });
+
+    it('should throw when passing null as identifier', async function () {
+      let thrown = false;
+
+      try {
+        const opId = null;
+        const index = 0;
+        asserter.OperationIdentifier(opId, index);
+      } catch (e) {
+        // console.error(e);
+        expect(e.name).to.equal('AsserterError');
+        expect(e.message).to.equal('OperationIdentifier is null');
+        thrown = true; 
+      }
+
+      expect(thrown).to.equal(true);       
+    });    
+
+    it('should throw when passing out of order index', async function () {
+      let thrown = false;
+
+      try {
+        const opId = new OperationIdentifier(0);
+        const index = 1;
+        asserter.OperationIdentifier(opId, index);
+      } catch (e) {
+        // console.error(e);
+        expect(e.name).to.equal('AsserterError');
+        expect(e.message).to.equal('OperationIdentifier.index 0 is out of order, expected 1');
+        thrown = true; 
+      }
+
+      expect(thrown).to.equal(true);       
+    });      
+
+    it('should assert a valid identifier with a networkIndex properly', async function () {
+      let thrown = false;
+
+      try {
+        const opId = new OperationIdentifier(0);
+        opId.network_index = validNetworkIndex;
+
+        const index = 0;
+        asserter.OperationIdentifier(opId, index);
+      } catch (e) {
+        // console.error(e);
+        expect(e.name).to.equal('AsserterError');
+        expect(e.message).to.equal('OperationIdentifier.index 0 is out of order, expected 1');
+        thrown = true; 
+      }
+
+      expect(thrown).to.equal(false);       
+    });   
+
+    it('should throw when passing a valid identifier with an invalid networkIndex', async function () {
+      let thrown = false;
+
+      try {
+        const opId = new OperationIdentifier(0);
+        opId.network_index = invalidNetworkIndex;
+
+        const index = 0;
+        asserter.OperationIdentifier(opId, index);
+      } catch (e) {
+        // console.error(e);
+        expect(e.name).to.equal('AsserterError');
+        expect(e.message).to.equal('OperationIdentifier.network_index is invalid');
+        thrown = true; 
+      }
+
+      expect(thrown).to.equal(true);       
+    });  
+  });
+
+  describe('Test AccountIdentifier', function () {
+    const asserter = new RosettaSDK.Asserter();
+    const { AccountIdentifier, SubAccountIdentifier } = RosettaSDK.Client;   
+    
+    it('should assert a valid identifier properly', async function () {
+      let thrown = false;
+
+      try {
+        const accId = new AccountIdentifier('acct1');
+        asserter.AccountIdentifier(accId);
+      } catch (e) {
+        console.error(e);
+        thrown = true; 
+      }
+
+      expect(thrown).to.equal(false);        
+    }); 
+
+    it('should throw when passing an invalid address', async function () {
+      let thrown = false;
+
+      try {
+        const accId = new AccountIdentifier('');
+        asserter.AccountIdentifier(accId);
+      } catch (e) {
+        // console.error(e);
+        expect(e.name).to.equal('AsserterError');
+        expect(e.message).to.equal('Account.address is missing');
+        thrown = true; 
+      }
+
+      expect(thrown).to.equal(true);        
+    }); 
+
+    it('should assert a valid identifier with subaccount', async function () {
+      let thrown = false;
+
+      try {
+        const accId = new AccountIdentifier('acct1');
+        accId.sub_account = new SubAccountIdentifier('acct2');
+        asserter.AccountIdentifier(accId);
+      } catch (e) {
+        console.error(e);
+        thrown = true; 
+      }
+
+      expect(thrown).to.equal(false);        
+    }); 
+
+    it('throw when passing an invalid identifier with subaccount', async function () {
+      let thrown = false;
+
+      try {
+        const accId = new AccountIdentifier('acct1');
+        accId.sub_account = new SubAccountIdentifier('');
+        asserter.AccountIdentifier(accId);
+      } catch (e) {
+        // console.error(e);
+        expect(e.name).to.equal('AsserterError');
+        expect(e.message).to.equal('Account.sub_account.address is missing');
+        thrown = true; 
+      }
+
+      expect(thrown).to.equal(true);        
+    }); 
+  });
+
+  describe('Test Operation', function () {
+    const asserter = new RosettaSDK.Asserter();
+    const {
+      Amount,
+      Currency,
+      OperationIdentifier,
+      Operation,
+      AccountIdentifier,
+      NetworkIdentifier,
+      BlockIdentifier,
+      Peer, 
+      NetworkOptionsResponse,
+      NetworkStatusResponse,
+      Version,
+      Allow,
+      OperationStatus,
+    } = RosettaSDK.Client;      
+
+    const validAmount = new Amount('1000', new Currency('BTC', 8));
+    const validAccount = new AccountIdentifier('test');
+
+    const tests = {
+      'valid operation': {
+        operation: Operation.constructFromObject({
+          operation_identifier: new OperationIdentifier(1),
+          type:    'PAYMENT',
+          status:  'SUCCESS',
+          account: validAccount,
+          amount:  validAmount,
+        }),
+        index:      1,
+        successful: true,
+        err:        null,
+      },
+      'valid operation no account': {
+        operation: Operation.constructFromObject({
+          operation_identifier: new OperationIdentifier(1),
+          type:   'PAYMENT',
+          status: 'SUCCESS',
+        }),
+        index:      1,
+        successful: true,
+        err:        null,
+      },
+      'nil operation': {
+        operation: null,
+        index:     1,
+        err:       'Operation is null',
+      },
+      'invalid operation no account': {
+        operation: Operation.constructFromObject({
+          operation_identifier: new OperationIdentifier(1),
+          type:   'PAYMENT',
+          status: 'SUCCESS',
+          amount: validAmount,
+        }),
+        index: 1,
+        err:   'Account is null',
+      },
+      'invalid operation empty account': {
+        operation: Operation.constructFromObject({
+          operation_identifier: new OperationIdentifier(1),
+          type:    'PAYMENT',
+          status:  'SUCCESS',
+          account: new AccountIdentifier(),
+          amount:  validAmount,
+        }),
+        index: 1,
+        err:   'Account.address is missing',
+      },
+      'invalid operation invalid index': {
+        operation: Operation.constructFromObject({
+          operation_identifier: new OperationIdentifier(1),
+          type:   'PAYMENT',
+          status: 'SUCCESS',
+        }),
+        index: 2,
+        err:   'OperationIdentifier.index 1 is out of order, expected 2',
+      },
+      'invalid operation invalid type': {
+        operation: Operation.constructFromObject({
+          operation_identifier: new OperationIdentifier(1),
+          type:   'STAKE',
+          status: 'SUCCESS',
+        }),
+        index: 1,
+        err:   'Operation.type STAKE is invalid',
+      },
+      'unsuccessful operation': {
+        operation: Operation.constructFromObject({
+          operation_identifier: new OperationIdentifier(1),
+          type:   'PAYMENT',
+          status: 'FAILURE',
+        }),
+        index:      1,
+        successful: false,
+        err:        null,
+      },
+      'invalid operation invalid status': {
+        operation: Operation.constructFromObject({
+          operation_identifier: new OperationIdentifier(1),
+          type:   'PAYMENT',
+          status: 'DEFERRED',
+        }),
+        index: 1,
+        err:   'OperationStatus.status DEFERRED is not valid within this Asserter',
+      },
+      'valid construction operation': {
+        operation: Operation.constructFromObject({
+          operation_identifier: new OperationIdentifier(1),
+          type:    'PAYMENT',
+          account: validAccount,
+          amount:  validAmount,
+        }),
+        index:        1,
+        successful:   false,
+        construction: true,
+        err:          null,
+      },
+      'invalid construction operation': {
+        operation: Operation.constructFromObject({
+          operation_identifier: new OperationIdentifier(1),
+          type:    'PAYMENT',
+          status:  'SUCCESS',
+          account: validAccount,
+          amount:  validAmount,
+        }),
+        index:        1,
+        successful:   false,
+        construction: true,
+        err:          'Operation.status must be empty for construction',
+      },
+    };
+
+    for (let testName of Object.keys(tests)) {
+      const testParams = tests[testName];
+
+      const networkIdentifier = new NetworkIdentifier('hello', 'world');
+
+      const networkStatusResponse = NetworkStatusResponse.constructFromObject({
+        current_block_identifier: new BlockIdentifier(0, 'block 0'),
+        current_block_timestamp: new BlockIdentifier(100, 'block 100'),
+        genesis_block_identifier: RosettaSDK.Asserter.MinUnixEpoch + 1,
+        peers: [ new Peer('peer 1') ],
+      });
+
+      const networkOptionsResponse = NetworkOptionsResponse.constructFromObject({
+        version: new Version('1.4.0', '1.0'),
+        allow: new Allow([
+          new OperationStatus('SUCCESS', true),
+          new OperationStatus('FAILURE', false),
+        ], ['PAYMENT']),
+      });
+
+      let asserter;
+
+      try {
+        asserter = RosettaSDK.Asserter.NewClientWithResponses(
+          networkIdentifier,
+          networkStatusResponse,
+          networkOptionsResponse,
+        );
+      } catch (e) {
+        console.error(e);
+      }
+
+      it(`should pass test case '${testName}'`, async function () {
+        expect(asserter).to.not.equal(undefined);
+
+        let thrown = false;
+
+        try {
+          asserter.Operation(testParams.operation, testParams.index, testParams.construction);
+        } catch (e) {
+          // console.error(e);
+          expect(e.message).to.equal(testParams.err);
+          thrown = true;   
+        }
+
+        expect(thrown).to.equal(testParams.err != null);
+
+        if (!thrown && !testParams.construction) {
+          let success;
+
+          try {
+            success = asserter.OperationSuccessful(testParams.operation);
+          } catch (e) {
+            console.error(e);
+            thrown = true;
+          } finally {
+            expect(thrown).to.equal(false);
+            expect(success).to.equal(testParams.successful);
+          }
+        }
+      });
+    }
+  });
+
   describe('Contains Currency', function () {
     const asserter = new RosettaSDK.Asserter();
 
