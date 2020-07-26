@@ -832,6 +832,662 @@ describe('Asserter Tests', function () {
     }
   });
 
+  describe('ConstructionMetadataResponse Tests', function () {
+    const asserter = new RosettaSDK.Asserter();
+
+    const {
+      ConstructionMetadataResponse,
+    } = RosettaSDK.Client;
+
+    it('should assert a valid response', async function () {
+      let thrown = false;
+
+      let metadata = {
+      };
+
+      let response = new ConstructionMetadataResponse(metadata);
+
+      try {
+        asserter.ConstructionMetadataResponse(response)
+      } catch (e) {
+        console.error(e);
+        thrown = true;
+      }
+
+      expect(thrown).to.equal(false);      
+    });
+
+    it('should throw on a null response', async function () {
+      let thrown = false;
+
+      let metadata = {
+      };
+
+      let response = null;
+
+      try {
+        asserter.ConstructionMetadataResponse(response)
+      } catch (e) {
+        // console.error(e);
+        expect(e.name).to.equal('AsserterError');
+        expect(e.message).to.equal('constructionMetadataResponse cannot be null');
+        thrown = true;
+      }
+
+      expect(thrown).to.equal(true);      
+    });   
+
+    it('should throw on invalid metadata', async function () {
+      let thrown = false;
+
+      let metadata = null;
+      let response = new ConstructionMetadataResponse(metadata);
+
+      try {
+        asserter.ConstructionMetadataResponse(response)
+      } catch (e) {
+        // console.error(e);
+        expect(e.name).to.equal('AsserterError');
+        expect(e.message).to.equal('constructionMetadataResponse.metadata is null');
+        thrown = true;
+      }
+
+      expect(thrown).to.equal(true);      
+    });    
+  });
+
+  describe('ConstructionSubmitResponse Tests', function () {
+    const asserter = new RosettaSDK.Asserter();
+
+    const {
+      ConstructionSubmitResponse,
+      TransactionIdentifier,
+    } = RosettaSDK.Client;
+
+    it('should assert a valid response', async function () {
+      let thrown = false;
+
+      let txId = new TransactionIdentifier('tx1');
+      let response = new ConstructionSubmitResponse(txId);
+
+      try {
+        asserter.ConstructionSubmitResponse(response);
+      } catch (e) {
+        console.error(e);
+        thrown = true;
+      }
+
+      expect(thrown).to.equal(false);      
+    });
+
+    it('should throw on a null response', async function () {
+      let thrown = false;
+
+      let response = null;
+
+      try {
+        asserter.ConstructionSubmitResponse(response);
+      } catch (e) {
+        // console.error(e);
+        expect(e.name).to.equal('AsserterError');
+        expect(e.message).to.equal('constructionSubmitResponse cannot be null');        
+        thrown = true;
+      }
+
+      expect(thrown).to.equal(true);      
+    });   
+
+    it('should throw on invalid transaction identifier', async function () {
+      let thrown = false;
+
+      let txId = null;
+      let response = new ConstructionSubmitResponse(txId);
+
+      try {
+        asserter.ConstructionSubmitResponse(response);
+      } catch (e) {
+        // console.error(e);
+        expect(e.name).to.equal('AsserterError');
+        expect(e.message).to.equal('TransactionIdentifier is null');        
+        thrown = true;
+      }
+
+      expect(thrown).to.equal(true);       
+    });    
+  });
+
+  describe('Network Tests', function () {
+    const asserter = new RosettaSDK.Asserter();
+
+    const {
+      NetworkIdentifier,
+      SubNetworkIdentifier,
+    } = RosettaSDK.Client;
+
+    it('should assert a valid network properly', async function () {
+      let thrown = false;
+
+      const network = new NetworkIdentifier('bitcoin', 'mainnet');
+
+      try {
+        asserter.NetworkIdentifier(network);
+      } catch (e) {
+        thrown = true;
+      }
+
+      expect(thrown).to.equal(false);       
+    });
+
+    it('should throw when network is null', async function () {
+      let thrown = false;
+
+      const network = null;
+
+      try {
+        asserter.NetworkIdentifier(network);
+      } catch (e) {
+        // console.error(e)
+        expect(e.name).to.equal('AsserterError');
+        expect(e.message).to.equal('NetworkIdentifier is null');
+        thrown = true;
+      }
+      
+      expect(thrown).to.equal(true);       
+    });   
+
+    it('should throw when asserting an invalid network (blockchain missing)', async function () {
+      let thrown = false;
+
+      const network = new NetworkIdentifier('', 'mainnet');
+
+      try {
+        asserter.NetworkIdentifier(network);
+      } catch (e) {
+        expect(e.name).to.equal('AsserterError');
+        expect(e.message).to.equal('NetworkIdentifier.blockchain is missing');        
+        thrown = true;
+      }
+
+      expect(thrown).to.equal(true);       
+    });
+
+    it('should throw when asserting an invalid network (network missing)', async function () {
+      let thrown = false;
+
+      const network = new NetworkIdentifier('bitcoin', '');
+
+      try {
+        asserter.NetworkIdentifier(network);
+      } catch (e) {
+        expect(e.name).to.equal('AsserterError');
+        expect(e.message).to.equal('NetworkIdentifier.network is missing');        
+        thrown = true;
+      }
+
+      expect(thrown).to.equal(true);       
+    });    
+
+    it('should correctly assert a valid subnetwork', async function () {
+      let thrown = false;
+
+      const network = new NetworkIdentifier('bitcoin', 'mainnet');
+      network.sub_network_identifier = new SubNetworkIdentifier('shard 1');
+
+      try {
+        asserter.NetworkIdentifier(network);
+      } catch (e) {
+        thrown = true;
+      }
+
+      expect(thrown).to.equal(false);       
+    });   
+
+    it('should throw when passing an invalid subnetwork', async function () {
+      let thrown = false;
+
+      const network = new NetworkIdentifier('bitcoin', 'mainnet');
+      network.sub_network_identifier = new SubNetworkIdentifier();
+
+      try {
+        asserter.NetworkIdentifier(network);
+      } catch (e) {
+        expect(e.name).to.equal('AsserterError');
+        expect(e.message).to.equal('NetworkIdentifier.sub_network_identifier.network is missing');        
+        thrown = true;
+      }
+
+      expect(thrown).to.equal(true);       
+    });    
+  });
+
+  describe('Test Version', function () {
+    const asserter = new RosettaSDK.Asserter();
+
+    const {
+      Version,
+    } = RosettaSDK.Client;
+
+    const middlewareVersion = '1.2';
+    const invalidMiddlewareVersion = '';
+    const validRosettaVersion = '1.4.0';
+
+    it('should assert a valid version correctly', async function () {
+      let thrown = false;
+
+      let version = Version.constructFromObject({
+        rosetta_version: validRosettaVersion,
+        node_version: '1.0',
+      });
+
+      try {
+        asserter.Version(version);
+      } catch(e) {
+        console.error(e);
+        thrown = true;
+      }
+
+      expect(thrown).to.equal(false);
+    });
+
+    it('should assert a valid version with middleware correctly', async function () {
+      let thrown = false;
+
+      let version = Version.constructFromObject({
+        rosetta_version: validRosettaVersion,
+        node_version: '1.0',
+        middleware_version: middlewareVersion,
+      });
+
+      try {
+        asserter.Version(version);
+      } catch(e) {
+        console.error(e);
+        thrown = true;
+      }
+
+      expect(thrown).to.equal(false);
+    });
+
+    it('should throw on too old rosetta version', async function () {
+      let thrown = false;
+
+      let version = Version.constructFromObject({
+        rosetta_version: '1.2.0',
+        node_version: '1.0',
+      });
+
+      try {
+        asserter.Version(version);
+      } catch(e) {
+        console.error(e);
+        thrown = true;
+      }
+
+      expect(thrown).to.equal(false);
+    });  
+
+    it('should throw on null version', async function () {
+      let thrown = false;
+
+      let version = null;
+
+      try {
+        asserter.Version(version);
+      } catch(e) {
+        // console.error(e);
+        expect(e.name).to.equal('AsserterError');
+        expect(e.message).to.equal('Version is null');             
+        thrown = true;
+      }
+
+      expect(thrown).to.equal(true);
+    }); 
+
+    it('should throw on invalid node version', async function () {
+      let thrown = false;
+
+      let version = Version.constructFromObject({
+        rosetta_version: '1.2.0',
+      });
+
+      try {
+        asserter.Version(version);
+      } catch(e) {
+        // console.error(e);
+        expect(e.name).to.equal('AsserterError');
+        expect(e.message).to.equal('Version.node_version is missing');             
+        thrown = true;
+      }
+
+      expect(thrown).to.equal(true);
+    });     
+
+    it('should throw on invalid middleware version', async function () {
+      let thrown = false;
+
+      let version = Version.constructFromObject({
+        rosetta_version: validRosettaVersion,
+        node_version: '1.0',
+        middleware_version: invalidMiddlewareVersion,
+      });
+
+      try {
+        asserter.Version(version);
+      } catch(e) {
+        // console.error(e);
+        expect(e.name).to.equal('AsserterError');
+        expect(e.message).to.equal('Version.middleware_version is missing');             
+        thrown = true;
+      }
+
+      expect(thrown).to.equal(true);
+    });      
+  });
+
+  describe('Test Allow', function () {
+    const asserter = new RosettaSDK.Asserter();
+
+    const {
+      OperationStatus,
+      Allow,
+    } = RosettaSDK.Client;    
+
+    const operationStatuses = [
+      new OperationStatus('SUCCESS', true),
+      new OperationStatus('FAILURE', false),
+    ];  
+
+    const operationTypes = ['PAYMENT'];
+
+    it('should assert a valid allow correctly', async function () {
+      let thrown = false;
+
+      let allow = new Allow(operationStatuses, operationTypes);
+
+      try {
+        asserter.Allow(allow);
+
+      } catch(e) {
+        thrown = true;
+      }
+
+      expect(thrown).to.equal(false);
+    });
+
+    it('should throw when null is passed', async function () {
+      let thrown = false;
+
+      let allow = null;
+
+      try {
+        asserter.Allow(allow);
+
+      } catch(e) {
+        expect(e.name).to.equal('AsserterError');
+        expect(e.message).to.equal('Allow is null');          
+        thrown = true;
+      }
+
+      expect(thrown).to.equal(true);
+    });    
+
+    it('should throw when no operationStatuses are found', async function () {
+      let thrown = false;
+
+      let allow = new Allow(null, operationTypes);
+
+      try {
+        asserter.Allow(allow);
+
+      } catch(e) {
+        expect(e.name).to.equal('AsserterError');
+        expect(e.message).to.equal('No Allow.operation_statuses found');          
+        thrown = true;
+      }
+
+      expect(thrown).to.equal(true);
+    });    
+
+    it('should throw when no successful statuses are found', async function () {
+      let thrown = false;
+
+      let allow = new Allow([operationStatuses[1]], operationTypes);
+
+      try {
+        asserter.Allow(allow);
+
+      } catch(e) {
+        expect(e.name).to.equal('AsserterError');
+        expect(e.message).to.equal('No successful Allow.operation_statuses found');          
+        thrown = true;
+      }
+
+      expect(thrown).to.equal(true);
+    });    
+    
+    it('should throw when no operation types exist', async function () {
+      let thrown = false;
+
+      let allow = new Allow(operationStatuses, null);
+
+      try {
+        asserter.Allow(allow);
+
+      } catch(e) {
+        // console.error(e)
+        expect(e.name).to.equal('AsserterError');
+        expect(e.message).to.equal('No Allow.operation_statuses found');          
+        thrown = true;
+      }
+
+      expect(thrown).to.equal(true);
+    });        
+  });
+
+  describe('Test Error', function () {
+    const asserter = new RosettaSDK.Asserter();
+
+    it('should assert a valid error correctly', async function () {
+      let thrown = false;
+
+      const error = new RosettaSDK.Client.Error(12, 'signature invalid');
+
+      try {
+        asserter.Error(error);
+      } catch (e) {
+        thrown = true;
+      }
+
+      expect(thrown).to.equal(false);
+    });
+
+    it('should throw when passing nil', async function () {
+      let thrown = false;
+
+      const error = null;
+
+      try {
+        asserter.Error(error);
+      } catch (e) {
+        // console.error(e);
+        expect(e.name).to.equal('AsserterError');
+        expect(e.message).to.equal('Error is null');       
+        thrown = true;
+      }
+
+      expect(thrown).to.equal(true);
+    });
+
+    it('should throw on negative error codes', async function () {
+      let thrown = false;
+
+      const error = new RosettaSDK.Client.Error(-1, 'signature invalid');
+
+      try {
+        asserter.Error(error);
+      } catch (e) {
+        // console.error(e);
+        expect(e.name).to.equal('AsserterError');
+        expect(e.message).to.equal('Error.code is negative');       
+        thrown = true;
+      }
+
+      expect(thrown).to.equal(true);
+    });
+
+    it('should throw on empty error message', async function () {
+      let thrown = false;
+
+      const error = new RosettaSDK.Client.Error(0);
+
+      try {
+        asserter.Error(error);
+      } catch (e) {
+        // console.error(e);
+        expect(e.name).to.equal('AsserterError');
+        expect(e.message).to.equal('Error.message is missing');       
+        thrown = true;
+      }
+
+      expect(thrown).to.equal(true);
+    });
+  });
+
+  describe('Test Errors', function () {
+    const asserter = new RosettaSDK.Asserter();
+
+    it('should assert valid errors correctly', async function () {
+      let thrown = false;
+
+      const errors = [
+        new RosettaSDK.Client.Error(0, 'error 1'),
+        new RosettaSDK.Client.Error(1, 'error 2'),
+      ];
+
+      try {
+        asserter.Errors(errors);
+      } catch (e) {
+        thrown = true;
+      }
+
+      expect(thrown).to.equal(false);
+    });
+
+    it('should throw on duplicate error codes', async function () {
+      let thrown = false;
+
+      const errors = [
+        new RosettaSDK.Client.Error(0, 'error 1'),
+        new RosettaSDK.Client.Error(0, 'error 2'),
+      ];
+
+      try {
+        asserter.Errors(errors);
+      } catch (e) {
+        // console.error(e)
+        expect(e.name).to.equal('AsserterError');
+        expect(e.message).to.equal('Error code used multiple times');           
+        thrown = true;
+      }
+
+      expect(thrown).to.equal(true);
+    });    
+  });
+
+  describe('Test Valid Network List Response', function () {
+    const asserter = new RosettaSDK.Asserter();
+
+    const {
+      NetworkIdentifier,
+      SubNetworkIdentifier,
+      NetworkListResponse,
+    } = RosettaSDK.Client;
+
+    const network1 = new NetworkIdentifier('blockchain 1', 'network 1');
+
+    const network1Sub = new NetworkIdentifier('blockchain 1', 'network 1');
+    network1Sub.sub_network_identifier = new SubNetworkIdentifier('subnetwork');
+
+    const network2 = new NetworkIdentifier('blockchain 2', 'network 2');
+
+    const network3 = new NetworkIdentifier(null, 'network 2');
+
+    it('should assert a valid network list correctly', async function () {
+      let thrown = false;
+
+      const networkListResponse = new NetworkListResponse([
+        network1,
+        network1Sub,
+        network2,
+      ]);
+
+      try {
+        asserter.NetworkListResponse(networkListResponse);
+      } catch(e) {
+        console.error(e);
+        thrown = true;
+      }
+
+      expect(thrown).to.equal(false);
+    });
+
+    it('should throw when passing null', async function () {
+      let thrown = false;
+
+      const networkListResponse = null;
+
+      try {
+        asserter.NetworkListResponse(networkListResponse);
+      } catch(e) {
+        // console.error(e);
+        expect(e.name).to.equal('AsserterError');
+        expect(e.message).to.equal('NetworkListResponse is null');        
+        thrown = true;
+      }
+
+      expect(thrown).to.equal(true);
+    });
+
+    it('should throw when passing a duplicate network', async function () {
+      let thrown = false;
+
+      const networkListResponse = new NetworkListResponse([
+        network1Sub,
+        network1Sub,
+      ]);
+      
+      try {
+        asserter.NetworkListResponse(networkListResponse);
+      } catch(e) {
+        // console.error(e);
+        expect(e.name).to.equal('AsserterError');
+        expect(e.message).to.equal('NetworkListResponse.Network contains duplicated');        
+        thrown = true;
+      }
+
+      expect(thrown).to.equal(true);
+    });
+
+    it('should throw when passing an invalid network', async function () {
+      let thrown = false;
+
+      const networkListResponse = new NetworkListResponse([
+        network3,
+      ]);
+      
+      try {
+        asserter.NetworkListResponse(networkListResponse);
+      } catch(e) {
+        // console.error(e);
+        expect(e.name).to.equal('AsserterError');
+        expect(e.message).to.equal('NetworkIdentifier.blockchain is missing');        
+        thrown = true;
+      }
+
+      expect(thrown).to.equal(true);
+    });            
+  });
+
   describe('Test Block', function () {
     const asserter = new RosettaSDK.Asserter();
     const {
