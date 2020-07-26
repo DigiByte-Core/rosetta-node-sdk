@@ -774,9 +774,9 @@ describe('Asserter Tests', function () {
       const networkIdentifier = new NetworkIdentifier('hello', 'world');
 
       const networkStatusResponse = NetworkStatusResponse.constructFromObject({
-        current_block_identifier: new BlockIdentifier(0, 'block 0'),
-        current_block_timestamp: new BlockIdentifier(100, 'block 100'),
-        genesis_block_identifier: RosettaSDK.Asserter.MinUnixEpoch + 1,
+        genesis_block_identifier: new BlockIdentifier(0, 'block 0'),
+        current_block_identifier: new BlockIdentifier(100, 'block 100'),
+        current_block_timestamp: RosettaSDK.Asserter.MinUnixEpoch + 1,
         peers: [ new Peer('peer 1') ],
       });
 
@@ -829,6 +829,342 @@ describe('Asserter Tests', function () {
           }
         }
       });
+    }
+  });
+
+  describe('Test Block', function () {
+    const asserter = new RosettaSDK.Asserter();
+    const {
+      Amount,
+      Currency,
+      OperationIdentifier,
+      Operation,
+      AccountIdentifier,
+      NetworkIdentifier,
+      BlockIdentifier,
+      Block,
+      Transaction,
+      TransactionIdentifier,
+      Peer, 
+      NetworkOptionsResponse,
+      NetworkStatusResponse,
+      Version,
+      Allow,
+      OperationStatus,
+    } = RosettaSDK.Client;      
+
+    const validBlockIdentifier = new BlockIdentifier(100, 'blah');
+    const validParentBlockIdentifier = new BlockIdentifier(99, 'blah parent');
+
+    const validAmount = new Amount('1000', new Currency('BTC', 8));
+    const validAccount = new AccountIdentifier('test');
+
+    const validTransaction = new Transaction(
+      new TransactionIdentifier('blah'),
+      [
+        Operation.constructFromObject({
+          operation_identifier: new OperationIdentifier(0),
+          type: 'PAYMENT',
+          status: 'SUCCESS',
+          account: validAccount,
+          amount: validAmount,
+        }),
+
+        Operation.constructFromObject({
+          operation_identifier: new OperationIdentifier(1),
+          related_operations: [
+            new OperationIdentifier(0),
+          ],
+          type: 'PAYMENT',
+          status: 'SUCCESS',
+          account: validAccount,
+          amount: validAmount,
+        }),
+      ],
+    );
+
+    const relatedToSelfTransaction = new Transaction(
+      new TransactionIdentifier('blah'),
+      [
+        Operation.constructFromObject({
+          operation_identifier: new OperationIdentifier(0),
+          related_operations: [
+            new OperationIdentifier(0),
+          ],      
+          type: 'PAYMENT',
+          status: 'SUCCESS',
+          account: validAccount,
+          amount: validAmount,
+        }),
+      ],
+    );
+
+    const outOfOrderTransaction = new Transaction(
+      new TransactionIdentifier('blah'),
+      [
+        Operation.constructFromObject({
+          operation_identifier: new OperationIdentifier(1),
+          related_operations: [
+            new OperationIdentifier(0),
+          ],      
+          type: 'PAYMENT',
+          status: 'SUCCESS',
+          account: validAccount,
+          amount: validAmount,
+        }),
+
+        Operation.constructFromObject({
+          operation_identifier: new OperationIdentifier(0),
+          type: 'PAYMENT',
+          status: 'SUCCESS',
+          account: validAccount,
+          amount: validAmount,
+        }),
+      ],
+    );
+
+    const relatedToLaterTransaction = new Transaction(
+      new TransactionIdentifier('blah'),
+      [
+        Operation.constructFromObject({
+          operation_identifier: new OperationIdentifier(0),
+          related_operations: [
+            new OperationIdentifier(1),
+          ],      
+          type: 'PAYMENT',
+          status: 'SUCCESS',
+          account: validAccount,
+          amount: validAmount,
+        }),
+
+        Operation.constructFromObject({
+          operation_identifier: new OperationIdentifier(1),
+          related_operations: [
+            new OperationIdentifier(0),
+          ],      
+          type: 'PAYMENT',
+          status: 'SUCCESS',
+          account: validAccount,
+          amount: validAmount,
+        }),
+      ],
+    );
+
+    const relatedDuplicateTransaction = new Transaction(
+      new TransactionIdentifier('blah'),
+      [
+        Operation.constructFromObject({
+          operation_identifier: new OperationIdentifier(0),
+          type: 'PAYMENT',
+          status: 'SUCCESS',
+          account: validAccount,
+          amount: validAmount,
+        }),
+
+        Operation.constructFromObject({
+          operation_identifier: new OperationIdentifier(1),
+          related_operations: [
+            new OperationIdentifier(0),
+            new OperationIdentifier(0),
+          ],      
+          type: 'PAYMENT',
+          status: 'SUCCESS',
+          account: validAccount,
+          amount: validAmount,
+        }),
+      ],
+    );    
+
+    const tests = {
+      'valid block': {
+        block: Block.constructFromObject({
+          block_identifier: validBlockIdentifier,
+          parent_block_identifier: validParentBlockIdentifier,
+          timestamp: RosettaSDK.Asserter.MinUnixEpoch + 1,
+          transactions: [validTransaction],
+        }),
+        err: null,
+      },
+      'genesis block': {
+        block: Block.constructFromObject({
+          block_identifier: validBlockIdentifier,
+          parent_block_identifier: validBlockIdentifier,
+          transactions: [validTransaction],
+        }),
+        genesisIndex: validBlockIdentifier.index,
+        err: null,
+      },
+      'out of order transaction operations': {
+        block: Block.constructFromObject({
+          block_identifier: validBlockIdentifier,
+          parent_block_identifier: validParentBlockIdentifier,
+          timestamp: RosettaSDK.Asserter.MinUnixEpoch + 1,
+          transactions: [outOfOrderTransaction],
+        }),
+        err: 'OperationIdentifier.index 1 is out of order, expected 0',
+      },
+      'related to self transaction operations': {
+        block: Block.constructFromObject({
+          block_identifier: validBlockIdentifier,
+          parent_block_identifier: validParentBlockIdentifier,
+          timestamp: RosettaSDK.Asserter.MinUnixEpoch + 1,
+          transactions: [relatedToSelfTransaction],
+        }),
+        err: 'Related operation index 0 >= operation index 0',
+      },
+      'related to later transaction operations': {
+        block: Block.constructFromObject({
+          block_identifier: validBlockIdentifier,
+          parent_block_identifier: validParentBlockIdentifier,
+          timestamp: RosettaSDK.Asserter.MinUnixEpoch + 1,
+          transactions: [relatedToLaterTransaction],
+        }),
+        err: 'Related operation index 1 >= operation index 0',
+      },
+      'duplicate related transaction operations': {
+        block: Block.constructFromObject({
+          block_identifier: validBlockIdentifier,
+          parent_block_identifier: validParentBlockIdentifier,
+          timestamp: RosettaSDK.Asserter.MinUnixEpoch + 1,
+          transactions: [relatedDuplicateTransaction],
+        }),
+        err: 'Found duplicate related operation index 0 for operation index 1',
+      },
+      'nil block': {
+        block: null,
+        err: 'Block is null',
+      },
+      'nil block hash': {
+        block: Block.constructFromObject({
+          block_identifier: null,
+          parent_block_identifier: validParentBlockIdentifier,
+          timestamp: RosettaSDK.Asserter.MinUnixEpoch + 1,
+          transactions: [validTransaction],
+        }),
+        err: 'BlockIdentifier is null',
+      },
+      'invalid block hash': {
+        block: Block.constructFromObject({
+          block_identifier: new BlockIdentifier(),
+          parent_block_identifier: validParentBlockIdentifier,
+          timestamp: RosettaSDK.Asserter.MinUnixEpoch + 1,
+          transactions: [validTransaction],
+        }),
+        err: 'BlockIdentifier.hash is missing',
+      },
+      'block previous hash missing': {
+        block: Block.constructFromObject({
+          block_identifier: validBlockIdentifier,
+          parent_block_identifier: new BlockIdentifier(),
+          timestamp: RosettaSDK.Asserter.MinUnixEpoch + 1,
+          transactions: [validTransaction],
+        }),
+        err: 'BlockIdentifier.hash is missing',
+      },
+      'invalid parent block index': {
+        block: Block.constructFromObject({
+          block_identifier: validBlockIdentifier,
+          parent_block_identifier: new BlockIdentifier(
+            validBlockIdentifier.index,
+            validParentBlockIdentifier.hash,
+          ),
+          timestamp: RosettaSDK.Asserter.MinUnixEpoch + 1,
+          transactions: [validTransaction],
+        }),
+        err: 'BlockIdentifier.index <= ParentBlockIdentifier.index',
+      },
+      'invalid parent block hash': {
+        block: Block.constructFromObject({
+          block_identifier: validBlockIdentifier,
+          parent_block_identifier: new BlockIdentifier(
+            validParentBlockIdentifier.index,
+            validBlockIdentifier.hash,
+          ),
+          timestamp: RosettaSDK.Asserter.MinUnixEpoch + 1,
+          transactions: [validTransaction],
+        }),
+        err: 'BlockIdentifier.hash == ParentBlockIdentifier.hash',
+      },
+      'invalid block timestamp less than RosettaSDK.Asserter.MinUnixEpoch': {
+        block: Block.constructFromObject({
+          block_identifier: validBlockIdentifier,
+          parent_block_identifier: validParentBlockIdentifier,
+          transactions: [validTransaction],
+        }),
+        err: 'Timestamp 0 is before 01/01/2000',
+      },
+      'invalid block timestamp greater than MaxUnixEpoch': {
+        block: Block.constructFromObject({
+          block_identifier: validBlockIdentifier,
+          parent_block_identifier: validParentBlockIdentifier,
+          transactions: [validTransaction],
+          timestamp: RosettaSDK.Asserter.MaxUnixEpoch + 1,
+        }),
+        err: 'Timestamp 2209017600001 is after 01/01/2040',
+      },
+      'invalid block transaction': {
+        block: Block.constructFromObject({
+          block_identifier: validBlockIdentifier,
+          parent_block_identifier: validParentBlockIdentifier,
+          timestamp: RosettaSDK.Asserter.MinUnixEpoch + 1,
+          transactions: [
+            new Transaction(),
+          ],
+        }),
+        err: 'TransactionIdentifier is null',
+      },      
+    };
+
+    for (let testName of Object.keys(tests)) {
+      const testParams = tests[testName];
+
+      const networkIdentifier = new NetworkIdentifier('hello', 'world');
+
+      const genesisIndex = testParams.genesisIndex != null ? testParams.genesisIndex : 0;
+
+      const networkStatusResponse = NetworkStatusResponse.constructFromObject({
+        genesis_block_identifier: new BlockIdentifier(genesisIndex, `block ${genesisIndex}`),
+        current_block_identifier: new BlockIdentifier(100, 'block 100'),
+        current_block_timestamp: RosettaSDK.Asserter.MinUnixEpoch + 1,
+        peers: [ new Peer('peer 1') ],
+      });
+
+      const networkOptionsResponse = NetworkOptionsResponse.constructFromObject({
+        version: new Version('1.4.0', '1.0'),
+        allow: new Allow([
+          new OperationStatus('SUCCESS', true),
+          new OperationStatus('FAILURE', false),
+        ], ['PAYMENT']),
+      });
+
+      let asserter;
+
+      try {
+        asserter = RosettaSDK.Asserter.NewClientWithResponses(
+          networkIdentifier,
+          networkStatusResponse,
+          networkOptionsResponse,
+        );
+      } catch (e) {
+        console.error(e);
+      }
+
+      it(`should pass test case '${testName}'`, async function () {
+        expect(asserter).to.not.equal(undefined);
+
+        let thrown = false;
+
+        try {
+          asserter.Block(testParams.block);
+        } catch (e) {
+          // console.error(e);
+          expect(e.message).to.equal(testParams.err);
+          thrown = true;   
+        }
+
+        expect(thrown).to.equal(testParams.err != null);
+      });      
+
     }
   });
 
