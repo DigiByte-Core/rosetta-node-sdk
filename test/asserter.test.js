@@ -870,7 +870,7 @@ describe('Asserter Tests', function () {
       } catch (e) {
         // console.error(e);
         expect(e.name).to.equal('AsserterError');
-        expect(e.message).to.equal('constructionMetadataResponse cannot be null');
+        expect(e.message).to.equal('ConstructionMetadataResponse cannot be null');
         thrown = true;
       }
 
@@ -888,7 +888,7 @@ describe('Asserter Tests', function () {
       } catch (e) {
         // console.error(e);
         expect(e.name).to.equal('AsserterError');
-        expect(e.message).to.equal('constructionMetadataResponse.metadata is null');
+        expect(e.message).to.equal('ConstructionMetadataResponse.metadata is null');
         thrown = true;
       }
 
@@ -930,7 +930,7 @@ describe('Asserter Tests', function () {
       } catch (e) {
         // console.error(e);
         expect(e.name).to.equal('AsserterError');
-        expect(e.message).to.equal('constructionSubmitResponse cannot be null');        
+        expect(e.message).to.equal('ConstructionSubmitResponse cannot be null');        
         thrown = true;
       }
 
@@ -1822,6 +1822,1051 @@ describe('Asserter Tests', function () {
       });      
 
     }
+  });
+
+  describe('Test Server', function () {
+    const {
+      NetworkIdentifier,
+      AccountBalanceRequest,
+      PartialBlockIdentifier,
+      TransactionIdentifier,
+      AccountIdentifier,
+      Currency,
+      OperationIdentifier,
+      Operation,
+      BlockIdentifier,
+      BlockTransactionRequest,
+      ConstructionMetadataRequest,
+      ConstructionSubmitRequest,
+      MempoolTransactionRequest,
+      BlockRequest,
+      MetadataRequest,
+      NetworkRequest,
+      Amount,
+    } = RosettaSDK.Client;
+
+    const validNetworkIdentifier = NetworkIdentifier.constructFromObject({
+      blockchain: 'Bitcoin',
+      network: 'Mainnet',
+    });
+
+    const wrongNetworkIdentifier = NetworkIdentifier.constructFromObject({
+      blockchain: 'Bitcoin',
+      network: 'Testnet',
+    });
+
+    const validAccountIdentifier = new AccountIdentifier('acct1');
+
+    const genesisBlockIndex = 0;
+    const validBlockIndex = 1000;
+    const validPartialBlockIdentifier = PartialBlockIdentifier.constructFromObject({
+      index: validBlockIndex,
+    });
+
+    const validBlockIdentifier = BlockIdentifier.constructFromObject({
+        index: validBlockIndex,
+        hash: 'block 1',
+      })
+
+    const validTransactionIdentifier = new TransactionIdentifier('tx1');
+
+    /*
+    const validPublicKey = PublicKey.constructFromObject({
+      bytes: []byte('hello'),
+      curve_type: Secp256k1,
+    })
+    */
+
+    const validAmount = Amount.constructFromObject({
+      value: '1000',
+      currency: Currency.constructFromObject({
+        symbol: 'BTC',
+        decimals: 8,
+      }),
+    });
+
+    const validAccount = new AccountIdentifier('test');
+
+    const validOps = [
+      Operation.constructFromObject({
+        operation_identifier: new OperationIdentifier(0),
+        type: 'PAYMENT',
+        account: validAccount,
+        amount: validAmount,
+      }),
+      Operation.constructFromObject({
+        operation_identifier: new OperationIdentifier(1),
+        related_operations: [
+          new OperationIdentifier(0),
+        ],
+        type: 'PAYMENT',
+        account: validAccount,
+        amount: validAmount,
+      }),
+    ];
+
+    const unsupportedTypeOps = [
+      Operation.constructFromObject({
+        operation_identifier: new OperationIdentifier(0),
+        type: 'STAKE',
+        account: validAccount,
+        amount: validAmount,
+      }),
+      Operation.constructFromObject({
+        operation_identifier: new OperationIdentifier(1),
+        related_operations: [
+          new OperationIdentifier(0),
+        ],
+        type: 'PAYMENT',
+        account: validAccount,
+        amount: validAmount,
+      }),
+    ];
+
+    const invalidOps = [
+      Operation.constructFromObject({
+        operation_identifier: new OperationIdentifier(0),
+        type: 'PAYMENT',
+        status: 'SUCCESS',
+        account: validAccount,
+        amount: validAmount,
+      }),
+      Operation.constructFromObject({
+        operation_identifier: new OperationIdentifier(1),
+        related_operations: [
+          new OperationIdentifier(0),
+        ],
+        type: 'PAYMENT',
+        status: 'SUCCESS',
+        account: validAccount,
+        amount: validAmount,
+      }),
+    ];
+
+    /*
+    const validSignatures = [
+      {
+        signing_payload: &types.SigningPayload{
+          address: validAccount.Address,
+          bytes: []byte('blah'),
+        },
+        public_key: validPublicKey,
+        signature_type: types.Ed25519,
+        bytes: []byte('hello'),
+      },
+    ];
+
+    const signatureTypeMismatch = [
+      {
+        signing_payload: &types.SigningPayload{
+          address: validAccount.Address,
+          bytes: []byte('blah'),
+          signature_type: types.EcdsaRecovery,
+        },
+        public_key: validPublicKey,
+        signature_type: types.Ed25519,
+        bytes: []byte('hello'),
+      },
+    ];
+
+    const signatureTypeMatch = [
+      {
+        signing_payload: &types.SigningPayload{
+          address: validAccount.Address,
+          bytes: []byte('blah'),
+          signature_type: types.Ed25519,
+        },
+        public_key: validPublicKey,
+        signature_type: types.Ed25519,
+        bytes: []byte('hello'),
+      },
+    ];
+
+    const emptySignature = [
+      {
+        signing_payload: &types.SigningPayload{
+          address: validAccount.Address,
+          bytes: []byte('blah'),
+          signature_type: types.Ed25519,
+        },
+        public_key: validPublicKey,
+        signature_type: types.Ed25519,
+      },
+    ];
+    */    
+
+    const asserter = RosettaSDK.Asserter.NewServer(
+      ['PAYMENT'],
+      true, // allowHistorical
+      [validNetworkIdentifier],
+    );
+
+    describe('Test SupportedNetworks', function () {
+      it('should assert valid network identifiers correctly', async function () {
+        let thrown = false;
+
+        const networks = [
+          validNetworkIdentifier,
+          wrongNetworkIdentifier,
+        ];
+
+        try {
+          asserter.SupportedNetworks(networks);
+        } catch (e) {
+          console.error(e);
+          thrown = true; 
+        }
+
+        expect(thrown).to.equal(false);
+      });
+
+      it('should throw when passing no networks', async function () {
+        let thrown = false;
+
+        const networks = [
+        ];
+
+        try {
+          asserter.SupportedNetworks(networks);
+        } catch (e) {
+          // console.error(e);
+          expect(e.name).to.equal('AsserterError');
+          expect(e.message).to.equal('NetworkIdentifier Array contains no supported networks');
+          thrown = true; 
+        }
+
+        expect(thrown).to.equal(true);
+      });
+
+      it('should throw when returning an invalid network', async function () {
+        let thrown = false;
+
+        const networks = [
+          new NetworkIdentifier('blah'),
+        ];
+
+        try {
+          asserter.SupportedNetworks(networks);
+        } catch (e) {
+          // console.error(e);
+          expect(e.name).to.equal('AsserterError');
+          expect(e.message).to.equal('NetworkIdentifier.network is missing');          
+          thrown = true; 
+        }
+
+        expect(thrown).to.equal(true);
+      });
+
+      it('should throw when returning duplicate networks', async function () {
+        let thrown = false;
+
+        const networks = [
+          validNetworkIdentifier,
+          validNetworkIdentifier,
+        ];
+
+        try {
+          asserter.SupportedNetworks(networks);
+        } catch (e) {
+          // console.error(e);
+          expect(e.name).to.equal('AsserterError');
+          expect(e.message).to.equal('SupportedNetwork has a duplicate: {"blockchain":"Bitcoin","network":"Mainnet"}');             
+          thrown = true; 
+        }
+
+        expect(thrown).to.equal(true);
+      });      
+    });
+
+    describe('Test AccountBalanceRequest', function () {
+      const createServer = (allowHistorical) => {
+        const server = RosettaSDK.Asserter.NewServer(
+          ['PAYMENT'],
+          allowHistorical,
+          [validNetworkIdentifier],
+        );
+
+        return server;        
+      }
+
+      it('should assert valid balance request correctly', async function () {
+        let thrown = false;
+
+        const server = createServer(false);
+        const request = new AccountBalanceRequest(validNetworkIdentifier, validAccountIdentifier);
+
+        try {
+          server.AccountBalanceRequest(request);
+        } catch (e) {
+          console.error(e);
+          thrown = true; 
+        }
+
+        expect(thrown).to.equal(false);
+      });   
+
+      it('should throw when requesting account with invalid network', async function () {
+        let thrown = false;
+
+        const server = createServer(false);
+        const request = new AccountBalanceRequest(wrongNetworkIdentifier, validAccountIdentifier);
+
+        try {
+          server.AccountBalanceRequest(request);
+        } catch (e) {
+          // console.error(e);
+          expect(e.name).to.equal('AsserterError');
+          expect(e.message).to.equal('SupportedNetwork {"blockchain":"Bitcoin","network":"Testnet"} is not supported by this asserter');
+          thrown = true; 
+        }
+
+        expect(thrown).to.equal(true);
+      });   
+
+      it('should throw when passing null as a request', async function () {
+        let thrown = false;
+
+        const server = createServer(false);
+        const request = null;
+
+        try {
+          server.AccountBalanceRequest(request);
+        } catch (e) {
+          // console.error(e);
+          expect(e.name).to.equal('AsserterError');
+          expect(e.message).to.equal('AccountBalanceRequest is null');
+          thrown = true; 
+        }
+
+        expect(thrown).to.equal(true);
+      });     
+
+      it('should throw when passing a request without a network specifier', async function () {
+        let thrown = false;
+
+        const server = createServer(false);
+        const request = new AccountBalanceRequest(null, validAccountIdentifier);
+
+        try {
+          server.AccountBalanceRequest(request);
+        } catch (e) {
+          // console.error(e);
+          expect(e.name).to.equal('AsserterError');
+          expect(e.message).to.equal('NetworkIdentifier is null');
+          thrown = true; 
+        }
+
+        expect(thrown).to.equal(true);
+      });
+
+      it('should throw when passing a request without an account specifier', async function () {
+        let thrown = false;
+
+        const server = createServer(false);
+        const request = new AccountBalanceRequest(validNetworkIdentifier, null);
+
+        try {
+          server.AccountBalanceRequest(request);
+        } catch (e) {
+          // console.error(e);
+          expect(e.name).to.equal('AsserterError');
+          expect(e.message).to.equal('Account is null');
+          thrown = true; 
+        }
+
+        expect(thrown).to.equal(true);
+      });
+
+      it('should handle a valid historical request properly', async function () {
+        let thrown = false;
+
+        const server = createServer(true);
+        const request = new AccountBalanceRequest(validNetworkIdentifier, validAccountIdentifier);
+
+        try {
+          server.AccountBalanceRequest(request);
+        } catch (e) {
+          console.error(e);
+          thrown = true; 
+        }
+
+        expect(thrown).to.equal(false);
+      });     
+
+      it('should throw when passing an invalid historical request', async function () {
+        let thrown = false;
+
+        const server = createServer(true);
+        const request = new AccountBalanceRequest(validNetworkIdentifier, validAccountIdentifier);
+        request.block_identifier = new PartialBlockIdentifier();
+
+        try {
+          server.AccountBalanceRequest(request);
+        } catch (e) {
+          // console.error(e);
+          expect(e.name).to.equal('AsserterError');
+          expect(e.message).to.equal('Neither PartialBlockIdentifier.hash nor PartialBlockIdentifier.index is set');          
+          thrown = true; 
+        }
+
+        expect(thrown).to.equal(true);
+      });   
+
+      it('should throw when historical request is not available', async function () {
+        let thrown = false;
+
+        const server = createServer(false);
+        const request = new AccountBalanceRequest(validNetworkIdentifier, validAccountIdentifier);
+        request.block_identifier = validPartialBlockIdentifier;
+
+        try {
+          server.AccountBalanceRequest(request);
+        } catch (e) {
+          // console.error(e);
+          expect(e.name).to.equal('AsserterError');
+          expect(e.message).to.equal('historical balance loopup is not supported');          
+          thrown = true; 
+        }
+
+        expect(thrown).to.equal(true);
+      });       
+    });
+
+    describe('Test BlockRequest', function () {
+      it('should assert a valid request properly', async function () {
+        let thrown = false;
+
+        const request = new BlockRequest(validNetworkIdentifier, validPartialBlockIdentifier);
+
+        try {
+          asserter.BlockRequest(request);
+        } catch (e) {
+          console.error(e);
+          thrown = true; 
+        }
+
+        expect(thrown).to.equal(false);
+      });
+
+      it('should assert a valid request for block 0 properly', async function () {
+        let thrown = false;
+
+        const request = new BlockRequest(validNetworkIdentifier, PartialBlockIdentifier.constructFromObject({
+          index: genesisBlockIndex,
+        }));
+
+        try {
+          asserter.BlockRequest(request);
+        } catch (e) {
+          console.error(e);
+          thrown = true; 
+        }
+
+        expect(thrown).to.equal(false);
+      });
+
+      it('should throw when requesting an invalid network', async function () {
+        let thrown = false;
+
+        const request = new BlockRequest(wrongNetworkIdentifier, validPartialBlockIdentifier);
+
+        try {
+          asserter.BlockRequest(request);
+        } catch (e) {
+          // console.error(e);
+          expect(e.name).to.equal('AsserterError');
+          expect(e.message).to.equal('SupportedNetwork {"blockchain":"Bitcoin","network":"Testnet"} is not supported by this asserter');
+          thrown = true; 
+        }
+
+        expect(thrown).to.equal(true);
+      });
+
+      it('should throw when passing null', async function () {
+        let thrown = false;
+
+        const request = null;
+
+        try {
+          asserter.BlockRequest(request);
+        } catch (e) {
+          // console.error(e);
+          expect(e.name).to.equal('AsserterError');
+          expect(e.message).to.equal('BlockRequest is null');
+          thrown = true; 
+        }
+
+        expect(thrown).to.equal(true);
+      });
+
+      it('should throw when requesting a block without a network specifier', async function () {
+        let thrown = false;
+
+        const request = new BlockRequest();
+        request.block_identifier = validPartialBlockIdentifier;
+
+        try {
+          asserter.BlockRequest(request);
+        } catch (e) {
+          // console.error(e);
+          expect(e.name).to.equal('AsserterError');
+          expect(e.message).to.equal('NetworkIdentifier is null');
+          thrown = true; 
+        }
+
+        expect(thrown).to.equal(true);
+      });      
+
+      it('should throw when requesting a block without a block identifier', async function () {
+        let thrown = false;
+
+        const request = new BlockRequest(validNetworkIdentifier);
+
+        try {
+          asserter.BlockRequest(request);
+        } catch (e) {
+          // console.error(e);
+          expect(e.name).to.equal('AsserterError');
+          expect(e.message).to.equal('PartialBlockIdentifier is null');
+          thrown = true; 
+        }
+
+        expect(thrown).to.equal(true);
+      });       
+
+      it('should throw when requesting an invalid partialBlockIdentifier', async function () {
+        let thrown = false;
+
+        const request = new BlockRequest(validNetworkIdentifier, new PartialBlockIdentifier());
+
+        try {
+          asserter.BlockRequest(request);
+        } catch (e) {
+          // console.error(e);
+          expect(e.name).to.equal('AsserterError');
+          expect(e.message).to.equal('Neither PartialBlockIdentifier.hash nor PartialBlockIdentifier.index is set');
+          thrown = true; 
+        }
+
+        expect(thrown).to.equal(true);
+      });    
+    });
+
+    describe('Test BlockTransactionRequest', function () {
+      it('should assert a valid request properly', async function () {
+        let thrown = false;
+
+        const request = new BlockTransactionRequest(
+          validNetworkIdentifier,
+          validBlockIdentifier,
+          validTransactionIdentifier
+        );
+
+        try {
+          asserter.BlockTransactionRequest(request);
+        } catch (e) {
+          console.error(e);
+          thrown = true; 
+        }
+
+        expect(thrown).to.equal(false);        
+      });
+
+      it('should throw when passing an invalid network', async function () {
+        let thrown = false;
+
+        const request = new BlockTransactionRequest(
+          wrongNetworkIdentifier,
+          validBlockIdentifier,
+          validTransactionIdentifier
+        );
+
+        try {
+          asserter.BlockTransactionRequest(request);
+        } catch (e) {
+          // console.error(e);
+          expect(e.name).to.equal('AsserterError');
+          expect(e.message).to.equal('SupportedNetwork {"blockchain":"Bitcoin","network":"Testnet"} is not supported by this asserter');
+          thrown = true; 
+        }
+
+        expect(thrown).to.equal(true);        
+      });
+
+      it('should throw when passing null', async function () {
+        let thrown = false;
+
+        const request = null;
+
+        try {
+          asserter.BlockTransactionRequest(request);
+        } catch (e) {
+          // console.error(e);
+          expect(e.name).to.equal('AsserterError');
+          expect(e.message).to.equal('BlockTransactionRequest is null');
+          thrown = true; 
+        }
+
+        expect(thrown).to.equal(true);        
+      });    
+
+      it('should throw when the request is missing a network', async function () {
+        let thrown = false;
+
+        const request = new BlockTransactionRequest(
+          null,
+          validBlockIdentifier,
+          validTransactionIdentifier
+        );
+
+        try {
+          asserter.BlockTransactionRequest(request);
+        } catch (e) {
+          // console.error(e);
+          expect(e.name).to.equal('AsserterError');
+          expect(e.message).to.equal('NetworkIdentifier is null');
+          thrown = true; 
+        }
+
+        expect(thrown).to.equal(true);        
+      });
+
+      it('should throw when the request is missing a block identifier', async function () {
+        let thrown = false;
+
+        const request = new BlockTransactionRequest(
+          validNetworkIdentifier,
+          null,
+          validTransactionIdentifier
+        );
+
+        try {
+          asserter.BlockTransactionRequest(request);
+        } catch (e) {
+          // console.error(e);
+          expect(e.name).to.equal('AsserterError');
+          expect(e.message).to.equal('BlockIdentifier is null');
+          thrown = true; 
+        }
+
+        expect(thrown).to.equal(true);        
+      });    
+
+      it('should throw when the request\'s blockIdentifier is invalid', async function () {
+        let thrown = false;
+
+        const request = new BlockTransactionRequest(
+          validNetworkIdentifier,
+          new BlockIdentifier(),
+        );
+
+        try {
+          asserter.BlockTransactionRequest(request);
+        } catch (e) {
+          // console.error(e);
+          expect(e.name).to.equal('AsserterError');
+          expect(e.message).to.equal('BlockIdentifier.hash is missing');
+          thrown = true; 
+        }
+
+        expect(thrown).to.equal(true);        
+      });   
+    });
+
+    describe('Test ConstructionMetadataRequest', function () {
+      it('should assert a valid request properly', async function () {
+        let thrown = false;
+
+        const request = new ConstructionMetadataRequest(
+          validNetworkIdentifier,
+          {}, // options
+        );
+
+        try {
+          asserter.ConstructionMetadataRequest(request);
+        } catch (e) {
+          console.error(e);
+          thrown = true; 
+        }
+
+        expect(thrown).to.equal(false); 
+      });
+
+      it('should throw when a wrong network was specified', async function () {
+        let thrown = false;
+
+        const request = new ConstructionMetadataRequest(
+          wrongNetworkIdentifier,
+          {}, // options
+        );
+
+        try {
+          asserter.ConstructionMetadataRequest(request);
+        } catch (e) {
+          // console.error(e);
+          expect(e.name).to.equal('AsserterError');
+          expect(e.message).to.equal('SupportedNetwork {"blockchain":"Bitcoin","network":"Testnet"} is not supported by this asserter');
+          thrown = true; 
+        }
+
+        expect(thrown).to.equal(true); 
+      });  
+
+      it('should throw when the request is null', async function () {
+        let thrown = false;
+
+        const request = null;
+
+        try {
+          asserter.ConstructionMetadataRequest(request);
+        } catch (e) {
+          // console.error(e);
+          expect(e.name).to.equal('AsserterError');
+          expect(e.message).to.equal('ConstructionMetadataRequest is null');
+          thrown = true; 
+        }
+
+        expect(thrown).to.equal(true); 
+      });        
+
+      it('should throw when the request is missing a network', async function () {
+        let thrown = false;
+
+        const request = new ConstructionMetadataRequest(
+          null,
+          {}, // options
+        );
+
+        try {
+          asserter.ConstructionMetadataRequest(request);
+        } catch (e) {
+          // console.error(e);
+          expect(e.name).to.equal('AsserterError');
+          expect(e.message).to.equal('NetworkIdentifier is null');
+          thrown = true; 
+        }
+
+        expect(thrown).to.equal(true); 
+      });    
+
+      it('should throw when the request is missing options', async function () {
+        let thrown = false;
+
+        const request = new ConstructionMetadataRequest(
+          validNetworkIdentifier,
+          null,
+        );
+
+        try {
+          asserter.ConstructionMetadataRequest(request);
+        } catch (e) {
+          // console.error(e);
+          expect(e.name).to.equal('AsserterError');
+          expect(e.message).to.equal('ConstructionMetadataRequest.options is null');
+          thrown = true; 
+        }
+
+        expect(thrown).to.equal(true); 
+      });  
+    });
+
+    describe('Test ConstructionSubmitRequest', function () {
+      it('should assert the request properly', async function () {
+        let thrown = false;
+
+        const request = new ConstructionSubmitRequest(
+          validNetworkIdentifier,
+          'tx',
+        );
+
+        try {
+          asserter.ConstructionSubmitRequest(request);
+        } catch (e) {
+          console.error(e);
+          thrown = true; 
+        }
+
+        expect(thrown).to.equal(false); 
+      });  
+
+      it('should throw when the request is missing options', async function () {
+        let thrown = false;
+
+        const request = new ConstructionSubmitRequest(
+          wrongNetworkIdentifier,
+          'tx',
+        );
+
+        try {
+          asserter.ConstructionSubmitRequest(request);
+        } catch (e) {
+          // console.error(e);
+          expect(e.name).to.equal('AsserterError');
+          expect(e.message).to.equal('SupportedNetwork {"blockchain":"Bitcoin","network":"Testnet"} is not supported by this asserter');
+          thrown = true; 
+        }
+
+        expect(thrown).to.equal(true); 
+      });  
+
+      it('should throw the request is null', async function () {
+        let thrown = false;
+
+        const request = null;
+
+        try {
+          asserter.ConstructionSubmitRequest(request);
+        } catch (e) {
+          // console.error(e);
+          expect(e.name).to.equal('AsserterError');
+          expect(e.message).to.equal('ConstructionSubmitRequest.options is null');
+          thrown = true; 
+        }
+
+        expect(thrown).to.equal(true); 
+      });  
+
+      it('should throw when the request has no transaction', async function () {
+        let thrown = false;
+
+        const request = new ConstructionSubmitRequest(
+        );
+
+        try {
+          asserter.ConstructionSubmitRequest(request);
+        } catch (e) {
+          // console.error(e);
+          expect(e.name).to.equal('AsserterError');
+          expect(e.message).to.equal('NetworkIdentifier is null');
+          thrown = true; 
+        }
+
+        expect(thrown).to.equal(true); 
+      });  
+    });
+
+    describe('Test MempoolTransactionRequest', function () {
+      it('should assert a valid request properly', async function () {
+        let thrown = false;
+
+        const request = new MempoolTransactionRequest(
+          validNetworkIdentifier,
+          validTransactionIdentifier,
+        );
+
+        try {
+          asserter.MempoolTransactionRequest(request);
+        } catch (e) {
+          console.error(e);
+          thrown = true; 
+        }
+
+        expect(thrown).to.equal(false);         
+      });
+
+      it('should throw when the specified network not supported', async function () {
+        let thrown = false;
+
+        const request = new MempoolTransactionRequest(
+          wrongNetworkIdentifier,
+          validTransactionIdentifier,
+        );
+
+        try {
+          asserter.MempoolTransactionRequest(request);
+        } catch (e) {
+          // console.error(e);
+          expect(e.name).to.equal('AsserterError');
+          expect(e.message).to.equal('SupportedNetwork {"blockchain":"Bitcoin","network":"Testnet"} is not supported by this asserter');
+          thrown = true; 
+        }
+
+        expect(thrown).to.equal(true);         
+      });  
+
+      it('should throw then the request is null', async function () {
+        let thrown = false;
+
+        const request = null;
+
+        try {
+          asserter.MempoolTransactionRequest(request);
+        } catch (e) {
+          // console.error(e);
+          expect(e.name).to.equal('AsserterError');
+          expect(e.message).to.equal('MempoolTransactionRequest is null');
+          thrown = true; 
+        }
+
+        expect(thrown).to.equal(true);         
+      }); 
+
+      it('should throw then the request is missing a network', async function () {
+        let thrown = false;
+
+        const request = new MempoolTransactionRequest(
+          null,
+          validTransactionIdentifier,
+        );;
+
+        try {
+          asserter.MempoolTransactionRequest(request);
+        } catch (e) {
+          // console.error(e);
+          expect(e.name).to.equal('AsserterError');
+          expect(e.message).to.equal('NetworkIdentifier is null');
+          thrown = true; 
+        }
+
+        expect(thrown).to.equal(true);         
+      });  
+
+      it('should throw when the TransactionIdentifier is invalid', async function () {
+        let thrown = false;
+
+        const request = new MempoolTransactionRequest(
+          validNetworkIdentifier,
+          new TransactionIdentifier(),
+        );
+
+        try {
+          asserter.MempoolTransactionRequest(request);
+        } catch (e) {
+          // console.error(e);
+          expect(e.name).to.equal('AsserterError');
+          expect(e.message).to.equal('TransactionIdentifier.hash is missing');
+          thrown = true; 
+        }
+
+        expect(thrown).to.equal(true);         
+      });    
+    });
+
+    describe('Test MetadataRequest', function () {
+      it('should assert a valid request properly', async function () {
+        let thrown = false;
+
+        const request = new MetadataRequest();
+
+        try {
+          asserter.MetadataRequest(request);
+        } catch (e) {
+          // console.error(e);
+          thrown = true; 
+        }
+
+        expect(thrown).to.equal(false);   
+      });
+
+      it('should throw when the request is null', async function () {
+        let thrown = false;
+
+        const request = null;
+
+        try {
+          asserter.MempoolTransactionRequest(request);
+        } catch (e) {
+          // console.error(e);
+          expect(e.name).to.equal('AsserterError');
+          expect(e.message).to.equal('MempoolTransactionRequest is null');
+          thrown = true; 
+        }
+
+        expect(thrown).to.equal(true);   
+      });      
+    });
+
+    describe('Test NetworkRequest', function () {
+      it('should assert a valid request properly', async function () {
+        let thrown = false;
+
+        const request = new NetworkRequest(validNetworkIdentifier);
+
+        try {
+          asserter.NetworkRequest(request);
+        } catch (e) {
+          console.error(e);
+          thrown = true; 
+        }
+
+        expect(thrown).to.equal(false);   
+      });
+
+      it('should throw when the request has a unsupported network identifier', async function () {
+        let thrown = false;
+
+        const request = new NetworkRequest(wrongNetworkIdentifier);
+
+        try {
+          asserter.NetworkRequest(request);
+        } catch (e) {
+          // console.error(e);
+          expect(e.name).to.equal('AsserterError');
+          expect(e.message).to.equal('SupportedNetwork {"blockchain":"Bitcoin","network":"Testnet"} is not supported by this asserter');
+          thrown = true; 
+        }
+
+        expect(thrown).to.equal(true);   
+      });    
+
+      it('should throw when the request is null', async function () {
+        let thrown = false;
+
+        const request = null;
+
+        try {
+          asserter.NetworkRequest(request);
+        } catch (e) {
+          // console.error(e);
+          expect(e.name).to.equal('AsserterError');
+          expect(e.message).to.equal('NetworkRequest is null');
+          thrown = true; 
+        }
+
+        expect(thrown).to.equal(true);   
+      });    
+
+      it('should throw when the request is missing a network', async function () {
+        let thrown = false;
+
+        const request = new NetworkRequest();
+
+        try {
+          asserter.NetworkRequest(request);
+        } catch (e) {
+          // console.error(e);
+          expect(e.name).to.equal('AsserterError');
+          expect(e.message).to.equal('NetworkIdentifier is null');
+          thrown = true; 
+        }
+
+        expect(thrown).to.equal(true);   
+      });                  
+    });  
+
+    describe('Test ConstructionDeriveRequest', function () { 
+      // ToDo        
+    });  
+
+    describe('Test ConstructionPreprocessRequest', function () { 
+      // ToDo        
+    });  
+
+    describe('Test ConstructionPayloadsRequest', function () { 
+      // ToDo        
+    });  
+
+    describe('Test ConstructionCombineRequest', function () { 
+      // ToDo        
+    });  
+
+    describe('Test ConstructionHashRequest', function () { 
+      // ToDo        
+    });  
+
+    describe('Test ConstructionParseRequest', function () { 
+      // ToDo        
+    });    
   });
 
   describe('Contains Currency', function () {
