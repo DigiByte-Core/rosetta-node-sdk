@@ -21,13 +21,14 @@
 
 const defaultConfig = require('./config/default');
 const logger = require('./lib/logger');
-const ExpressServer = require('./lib/expressServer');
+const ExpressServer = require('./lib/server');
 
 const RosettaClient = require('rosetta-client');
 const RosettaFetcher = require('./lib/fetcher');
 const RosettaReconciler = require('./lib/reconciler');
 const RosettaParser = require('./lib/parser');
 const RosettaAsserter = require('./lib/asserter');
+const RosettaControllers = require('./lib/controllers');
 
 const RosettaUtils = require('./lib/utils');
 const RosettaInternalModels = require('./lib/models');
@@ -44,7 +45,19 @@ class RosettaServer {
       configuration
     );
 
-    this.expressServer = null;
+    const port = this.config.URL_PORT;
+    const openAPIPath = this.config.OPENAPI_YAML;
+
+    try {
+      this.expressServer = new ExpressServer(port, openAPIPath);
+      this.expressServer.launch();
+
+      logger.info(`Express server running on port ${port} using OpenAPI Spec: ${openAPIPath}`);
+
+    } catch (e) {
+      logger.error('Express Server failure', error.message);
+      this.close();
+    }
   }
 
   async launch() {
@@ -55,12 +68,14 @@ class RosettaServer {
       this.expressServer = new ExpressServer(port, openAPIPath);
       this.expressServer.launch();
 
-      logger.info(`Express server running on port ${port} using OpenAPI Spec: ${openAPIPath}`);
-
     } catch (error) {
       logger.error('Express Server failure', error.message);
       await this.close();
     }
+  }
+
+  register(route, handler) {
+    this.expressServer.app.routeHandlers[route] = handler;
   }
 
   async close() {
@@ -71,6 +86,7 @@ module.exports = {
   Asserter: RosettaAsserter,
   Server: RosettaServer,
   Reconciler: RosettaReconciler,
+  Controller: RosettaControllers,
   Syncer: RosettaSyncer,
   Fetcher: RosettaFetcher,
   Client: RosettaClient,

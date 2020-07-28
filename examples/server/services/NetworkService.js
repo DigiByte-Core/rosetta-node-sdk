@@ -19,31 +19,31 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-const RosettaSDK = require('../..');
-
-const ServiceHandlers = require('./services');
-
-/* Create a server configuration */
-const Server = new RosettaSDK.Server({
-  URL_PORT: 8080,
-});
+const RosettaSDK = require('../../..');
 
 /* Data API: Network */
-Server.register('/network/list', ServiceHandlers.Network.networkList);
-Server.register('/network/options', ServiceHandlers.Network.networkOptions);
-Server.register('/network/status', ServiceHandlers.Network.networkStatus);
+const networkList = async (params) => {
+  const { metadataRequest } = params;
+  return {};
+};
 
-/* Data API: Block */
-Server.register('/block', ServiceHandlers.Block.block);
-Server.register('/block/transaction', ServiceHandlers.Block.blockTransaction);
+const networkOptions = async (params) => {
+  const { networkRequest } = params;
+  return {};
+};
 
-/* Data API: Account */
-Server.register('/account/balance', ServiceHandlers.Account.balance);
+const networkStatus = async (params) => {
+  const { networkRequest } = params;
+  return {};
+};
 
-/* Data API: Mempool */
-Server.register('/mempool', ServiceHandlers.Mempool.mempool);
-Server.register('/mempool/transaction', ServiceHandlers.Mempool.mempoolTransaction);
+module.exports = {
+  /* /network/list */
+  networkList,
 
-/* Data API: Construction */
-Server.register('/construction/metadata', ServiceHandlers.Construction.constructioMetadata);
-Server.register('/construction/submit', ServiceHandlers.Construction.constructionSubmit);
+  /* /network/options */
+  networkOptions,
+
+  /* /network/status */
+  networkStatus,
+};

@@ -19,31 +19,24 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-const RosettaSDK = require('../..');
-
-const ServiceHandlers = require('./services');
-
-/* Create a server configuration */
-const Server = new RosettaSDK.Server({
-  URL_PORT: 8080,
-});
-
-/* Data API: Network */
-Server.register('/network/list', ServiceHandlers.Network.networkList);
-Server.register('/network/options', ServiceHandlers.Network.networkOptions);
-Server.register('/network/status', ServiceHandlers.Network.networkStatus);
+const RosettaSDK = require('../../..');
 
 /* Data API: Block */
-Server.register('/block', ServiceHandlers.Block.block);
-Server.register('/block/transaction', ServiceHandlers.Block.blockTransaction);
 
-/* Data API: Account */
-Server.register('/account/balance', ServiceHandlers.Account.balance);
+const block = async (params) => {
+  const { blockRequest } = params;
+  return {};
+};
 
-/* Data API: Mempool */
-Server.register('/mempool', ServiceHandlers.Mempool.mempool);
-Server.register('/mempool/transaction', ServiceHandlers.Mempool.mempoolTransaction);
+const blockTransaction = async (params) => {
+  const { blockTransactionRequest } = params;
+  return {};
+};
 
-/* Data API: Construction */
-Server.register('/construction/metadata', ServiceHandlers.Construction.constructioMetadata);
-Server.register('/construction/submit', ServiceHandlers.Construction.constructionSubmit);
+module.exports = {
+  /* /block */
+  block,
+
+  /* /block/transaction */
+  blockTransaction,
+};
