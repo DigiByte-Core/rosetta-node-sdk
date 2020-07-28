@@ -19,24 +19,31 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-const RosettaSDK = require('../../..');
+const RosettaSDK = require('../../../..');
 
-/* Data API: Construction */
-
-const constructioMetadata = (params) => {
-  const { constructionMetadataRequest } = params;
+/* Data API: Network */
+const networkList = async (params) => {
+  const { metadataRequest } = params;
   return {};
 };
 
-const constructionSubmit = (params) => {
-  const { constructionSubmitRequest } = params;
+const networkOptions = async (params) => {
+  const { networkRequest } = params;
+  return {};
+};
+
+const networkStatus = async (params) => {
+  const { networkRequest } = params;
   return {};
 };
 
 module.exports = {
-  /* /construction/metadata */
-  constructioMetadata,
+  /* /network/list */
+  networkList,
 
-  /* /construction/submit */
-  constructionSubmit,
+  /* /network/options */
+  networkOptions,
+
+  /* /network/status */
+  networkStatus,
 };

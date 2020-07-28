@@ -19,39 +19,24 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-const RosettaSDK = require('../..');
+const RosettaSDK = require('../../../..');
 
-// Create an instance of Fetcher
-const fetcher = new RosettaSDK.Fetcher({
-  server: {
-    protocol: 'http',
-    host: 'localhost',
-    port: '8080',
-  },
-});
+/* Data API: Mempool */
 
-const main = (async function () {
-  const { primaryNetwork, networkStatus } = await fetcher.initializeAsserter();
+const mempool = (params) => {
+  const { mempoolRequest } = params;
+  return {};
+};
 
-  console.log(`Primary Network: ${JSON.stringify(primaryNetwork)}`);
-  console.log(`Network Status: ${JSON.stringify(networkStatus)}`);
+const mempoolTransaction = (params) => {
+  const { mempoolTransactionRequest } = params;
+  return {};
+};
 
-  const block = await fetcher.blockRetry(
-    primaryNetwork,
-    new RosettaSDK.Utils.constructPartialBlockIdentifier(networkStatus.current_block_identifier),
-  );
+module.exports = {
+  /* /mempool */
+  mempool,
 
-  console.log(`Current Block: ${JSON.stringify(block)}`);
-
-  const blockMap = fetcher.blockRange(
-    primaryNetwork,
-    networkStatus.genesis_block_identifier.index,
-    networkStatus.genesis_block_identifier.index + 10,
-  );
-
-  console.log(`Current Range: ${JSON.stringify(blockMap)}`);
-});
-
-main().catch(e => {
-  console.error(e);
-})
+  /* /mempool/transaction */
+  mempoolTransaction,
+};

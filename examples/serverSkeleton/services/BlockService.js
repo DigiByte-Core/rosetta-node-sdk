@@ -19,24 +19,24 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-const RosettaSDK = require('../../..');
+const RosettaSDK = require('../../../..');
 
-/* Data API: Mempool */
+/* Data API: Block */
 
-const mempool = (params) => {
-  const { mempoolRequest } = params;
+const block = async (params) => {
+  const { blockRequest } = params;
   return {};
 };
 
-const mempoolTransaction = (params) => {
-  const { mempoolTransactionRequest } = params;
+const blockTransaction = async (params) => {
+  const { blockTransactionRequest } = params;
   return {};
 };
 
 module.exports = {
-  /* /mempool */
-  mempool,
+  /* /block */
+  block,
 
-  /* /mempool/transaction */
-  mempoolTransaction,
+  /* /block/transaction */
+  blockTransaction,
 };
