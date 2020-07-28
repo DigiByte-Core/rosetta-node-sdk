@@ -196,6 +196,8 @@ const launchServer = (options) => {
 
 describe('Fetcher', function () {
   describe('Test AccountBalanceRetry', function () {
+    this.timeout(5000);
+
     it('no failures', async function () {
       const port = getPort();
 
@@ -287,6 +289,8 @@ describe('Fetcher', function () {
    */
 
   describe('Test BlockRetry', function () {
+    this.timeout(5000);
+
     it('no failures', async function () {
       const port = getPort();
 
@@ -370,6 +374,8 @@ describe('Fetcher', function () {
    */
 
   describe('Test NetworkListRetry', function () {
+    this.timeout(5000);
+
     it('no failures', async function () {
       const port = getPort();
 
@@ -450,9 +456,11 @@ describe('Fetcher', function () {
 
       throw new Error('Fetcher did exceed its max number of allowed retries');            
     });    
-  }); 
+  });
 
   describe('Test NetworkStatusRetry', function () {
+    this.timeout(5000);
+
     it('no failures', async function () {
       const port = getPort();
 
@@ -530,6 +538,4 @@ describe('Fetcher', function () {
       throw new Error('Fetcher did exceed its max number of allowed retries');      
     });    
   });
-
- 
 });
