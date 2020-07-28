@@ -22,4 +22,36 @@
 const RosettaSDK = require('../..');
 
 // Create an instance of Fetcher
-const Fetcher = new RosettaSDK.Fetcher({});
+const fetcher = new RosettaSDK.Fetcher({
+  server: {
+    protocol: 'http',
+    host: 'localhost',
+    port: '8080',
+  },
+});
+
+const main = (async function () {
+  const { primaryNetwork, networkStatus } = await fetcher.initializeAsserter();
+
+  console.log(`Primary Network: ${JSON.stringify(primaryNetwork)}`);
+  console.log(`Network Status: ${JSON.stringify(networkStatus)}`);
+
+  const block = await fetcher.blockRetry(
+    primaryNetwork,
+    new RosettaSDK.Utils.constructPartialBlockIdentifier(networkStatus.current_block_identifier),
+  );
+
+  console.log(`Current Block: ${JSON.stringify(block)}`);
+
+  const blockMap = fetcher.blockRange(
+    primaryNetwork,
+    networkStatus.genesis_block_identifier.index,
+    networkStatus.genesis_block_identifier.index + 10,
+  );
+
+  console.log(`Current Range: ${JSON.stringify(blockMap)}`);
+});
+
+main().catch(e => {
+  console.error(e);
+})
