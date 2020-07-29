@@ -20,29 +20,6 @@
  */
 
 const RosettaSDK = require('../../..');
+const networkIdentifier = new RosettaSDK.Client.NetworkIdentifier('Rosetta', 'Testnet');
 
-const ServiceHandlers = require('./services');
-const networkIdentifier = require('./network');
-
-const asserter = RosettaSDK.Asserter.NewServer(
-  ['Transfer', 'Reward'],
-  false,
-  [networkIdentifier],
-);
-
-/* Create a server configuration */
-const Server = new RosettaSDK.Server({
-  URL_PORT: 8080,
-});
-
-// Register global asserter
-Server.useAsserter(asserter);
-
-/* Data API: Network */
-Server.register('/network/list', ServiceHandlers.Network.networkList);
-Server.register('/network/options', ServiceHandlers.Network.networkOptions);
-Server.register('/network/status', ServiceHandlers.Network.networkStatus);
-
-/* Data API: Block */
-Server.register('/block', ServiceHandlers.Block.block);
-Server.register('/block/transaction', ServiceHandlers.Block.blockTransaction);
+module.exports = networkIdentifier;
