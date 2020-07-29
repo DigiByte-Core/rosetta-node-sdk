@@ -111,7 +111,7 @@ const block = async (params) => {
   );
 
   const otherTransactions = [
-    new TransactionIdentifier('transaction 1'),
+    new Types.TransactionIdentifier('transaction 1'),
   ];
 
   return new Types.BlockResponse(
