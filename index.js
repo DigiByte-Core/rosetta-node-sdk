@@ -19,12 +19,11 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-const defaultConfig = require('./config/default');
 const logger = require('./lib/logger');
-const ExpressServer = require('./lib/server');
 
 const RosettaClient = require('rosetta-client');
 const RosettaFetcher = require('./lib/fetcher');
+const RosettaServer = require('./lib/server');
 const RosettaReconciler = require('./lib/reconciler');
 const RosettaParser = require('./lib/parser');
 const RosettaAsserter = require('./lib/asserter');
@@ -36,51 +35,6 @@ const RosettaInternalModels = require('./lib/models');
 const Errors = require('./lib/errors');
 const RosettaSyncer = require('./lib/syncer');
 const RosettaSyncerEvents = require('./lib/syncer/events');
-
-class RosettaServer {
-  constructor(configuration = {}) {
-    this.config = Object.assign(
-      {},
-      defaultConfig,
-      configuration
-    );
-
-    const port = this.config.URL_PORT;
-    const openAPIPath = this.config.OPENAPI_YAML;
-
-    try {
-      this.expressServer = new ExpressServer(port, openAPIPath);
-      this.expressServer.launch();
-
-      logger.info(`Express server running on port ${port} using OpenAPI Spec: ${openAPIPath}`);
-
-    } catch (e) {
-      logger.error('Express Server failure', error.message);
-      this.close();
-    }
-  }
-
-  async launch() {
-    try {
-      const port = this.config.URL_PORT;
-      const openAPIPath = this.config.OPENAPI_YAML;
-
-      this.expressServer = new ExpressServer(port, openAPIPath);
-      this.expressServer.launch();
-
-    } catch (error) {
-      logger.error('Express Server failure', error.message);
-      await this.close();
-    }
-  }
-
-  register(route, handler) {
-    this.expressServer.app.routeHandlers[route] = handler;
-  }
-
-  async close() {
-  }
-}
 
 module.exports = {
   Asserter: RosettaAsserter,
@@ -94,6 +48,7 @@ module.exports = {
 
   Utils: RosettaUtils,
   InternalModels: RosettaInternalModels,
+  logger: logger,
 
   RosettaSyncerEvents,
   Errors,
