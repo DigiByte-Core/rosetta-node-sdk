@@ -21,7 +21,7 @@
 
 const logger = require('./lib/logger');
 
-const RosettaClient = require('rosetta-client');
+const RosettaClient = require('rosetta-node-sdk-client');
 const RosettaFetcher = require('./lib/fetcher');
 const RosettaServer = require('./lib/server');
 const RosettaReconciler = require('./lib/reconciler');

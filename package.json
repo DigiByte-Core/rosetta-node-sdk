@@ -7,9 +7,8 @@
     "prestart": "npm install",
     "start": "node index.js",
     "run-example": "node examples/server",
-    "postinstall": "cd lib/client && npm run build",
     "eslint": "eslint .",
-    "test": "mocha --exit test && cd lib/client && npm run test"
+    "test": "mocha --exit test"
   },
   "keywords": [
     "openapi-generator",
@@ -29,7 +28,7 @@
     "js-yaml": "^3.3.0",
     "ono": "^5.0.1",
     "openapi-sampler": "^1.0.0-beta.15",
-    "rosetta-client": "file:lib/client",
+    "rosetta-node-sdk-client": "git+https://github.com/SmartArray/rosetta-node-sdk-client.git",
     "superagent": "3.7.0",
     "swagger-ui-express": "^4.0.2",
     "winston": "^3.2.1"
