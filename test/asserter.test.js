@@ -2116,7 +2116,7 @@ describe('Asserter Tests', function () {
         } catch (e) {
           // console.error(e);
           expect(e.name).to.equal('AsserterError');
-          expect(e.message).to.equal('SupportedNetwork {"blockchain":"Bitcoin","network":"Testnet"} is not supported');
+          expect(e.message).to.equal('Network {"blockchain":"Bitcoin","network":"Testnet"} is not supported');
           thrown = true; 
         }
 
@@ -2275,7 +2275,7 @@ describe('Asserter Tests', function () {
         } catch (e) {
           // console.error(e);
           expect(e.name).to.equal('AsserterError');
-          expect(e.message).to.equal('SupportedNetwork {"blockchain":"Bitcoin","network":"Testnet"} is not supported');
+          expect(e.message).to.equal('Network {"blockchain":"Bitcoin","network":"Testnet"} is not supported');
           thrown = true; 
         }
 
@@ -2386,7 +2386,7 @@ describe('Asserter Tests', function () {
         } catch (e) {
           // console.error(e);
           expect(e.name).to.equal('AsserterError');
-          expect(e.message).to.equal('SupportedNetwork {"blockchain":"Bitcoin","network":"Testnet"} is not supported');
+          expect(e.message).to.equal('Network {"blockchain":"Bitcoin","network":"Testnet"} is not supported');
           thrown = true; 
         }
 
@@ -2505,7 +2505,7 @@ describe('Asserter Tests', function () {
         } catch (e) {
           // console.error(e);
           expect(e.name).to.equal('AsserterError');
-          expect(e.message).to.equal('SupportedNetwork {"blockchain":"Bitcoin","network":"Testnet"} is not supported');
+          expect(e.message).to.equal('Network {"blockchain":"Bitcoin","network":"Testnet"} is not supported');
           thrown = true; 
         }
 
@@ -2602,7 +2602,7 @@ describe('Asserter Tests', function () {
         } catch (e) {
           // console.error(e);
           expect(e.name).to.equal('AsserterError');
-          expect(e.message).to.equal('SupportedNetwork {"blockchain":"Bitcoin","network":"Testnet"} is not supported');
+          expect(e.message).to.equal('Network {"blockchain":"Bitcoin","network":"Testnet"} is not supported');
           thrown = true; 
         }
 
@@ -2677,7 +2677,7 @@ describe('Asserter Tests', function () {
         } catch (e) {
           // console.error(e);
           expect(e.name).to.equal('AsserterError');
-          expect(e.message).to.equal('SupportedNetwork {"blockchain":"Bitcoin","network":"Testnet"} is not supported');
+          expect(e.message).to.equal('Network {"blockchain":"Bitcoin","network":"Testnet"} is not supported');
           thrown = true; 
         }
 
@@ -2802,7 +2802,7 @@ describe('Asserter Tests', function () {
         } catch (e) {
           // console.error(e);
           expect(e.name).to.equal('AsserterError');
-          expect(e.message).to.equal('SupportedNetwork {"blockchain":"Bitcoin","network":"Testnet"} is not supported');
+          expect(e.message).to.equal('Network {"blockchain":"Bitcoin","network":"Testnet"} is not supported');
           thrown = true; 
         }
 
