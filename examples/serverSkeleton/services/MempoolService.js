@@ -30,7 +30,7 @@ const RosettaSDK = require('../../../..');
 * mempoolRequest MempoolRequest 
 * returns MempoolResponse
 * */
-const mempool = (params) => {
+const mempool = async (params) => {
   const { mempoolRequest } = params;
   return {};
 };
@@ -42,7 +42,7 @@ const mempool = (params) => {
 * mempoolTransactionRequest MempoolTransactionRequest 
 * returns MempoolTransactionResponse
 * */
-const mempoolTransaction = (params) => {
+const mempoolTransaction = async (params) => {
   const { mempoolTransactionRequest } = params;
   return {};
 };
