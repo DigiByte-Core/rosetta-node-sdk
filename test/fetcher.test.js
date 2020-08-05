@@ -215,14 +215,14 @@ describe('Fetcher', function () {
         },
       });
 
-      const { block, balances, metadata } =
+      const { block, balances, metadata, coins } =
         await fetcher.accountBalanceRetry(basicNetwork, basicAccount, null);
 
-      expect(basicBlock).to.deep.equal(block);
+      expect(block).to.deep.equal(basicBlock);
       expect(basicAmounts.map((amount) => {
         return Rosetta.Client.Amount.constructFromObject(amount);
       })).to.deep.equal(balances);
-      expect(metadata).to.deep.equal(metadata);
+
       return true;
     });
 
