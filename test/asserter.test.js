@@ -70,7 +70,7 @@ describe('Asserter Tests', function () {
       current_block_identifier: T.BlockIdentifier.constructFromObject({
         index: 100,
         hash: 'block 100',
-      }),      
+      }),
       current_block_timestamp: RosettaSDK.Asserter.MinUnixEpoch + 1,
       peers: [
         { peer_id: 'peer 1' },
