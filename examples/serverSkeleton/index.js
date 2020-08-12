@@ -44,6 +44,12 @@ Server.register('/account/balance', ServiceHandlers.Account.balance);
 Server.register('/mempool', ServiceHandlers.Mempool.mempool);
 Server.register('/mempool/transaction', ServiceHandlers.Mempool.mempoolTransaction);
 
-/* Data API: Construction */
-Server.register('/construction/metadata', ServiceHandlers.Construction.constructioMetadata);
+/* Construction API */
+Server.register('/construction/metadata', ServiceHandlers.Construction.constructionMetadata);
 Server.register('/construction/submit', ServiceHandlers.Construction.constructionSubmit);
+Server.register('/construction/combine', ServiceHandlers.Construction.constructionCombine);
+Server.register('/construction/derive', ServiceHandlers.Construction.constructionDerive);
+Server.register('/construction/hash', ServiceHandlers.Construction.constructionHash);
+Server.register('/construction/parse', ServiceHandlers.Construction.constructionParse);
+Server.register('/construction/payloads', ServiceHandlers.Construction.constructionPayloads);
+Server.register('/construction/preprocess', ServiceHandlers.Construction.constructionPreprocess);
