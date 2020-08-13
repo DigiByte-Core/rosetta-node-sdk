@@ -77,3 +77,9 @@ const {
 - **InternalModels** - Models, that are commonly used internally.
 - **logger** - Default Logger Singleton Class.
 - **version** - Specifies the version of this SDK. This semver is equal to the Rosetta API SDK for convencience.
+
+### ToDos
+- [ ] Setup CI (`npm run test` will execute 313 tests)
+- [ ] Support `keys` (cryptographic API) 
+- [ ] Documentation 
+- [ ] Test Reconciler in live environment
