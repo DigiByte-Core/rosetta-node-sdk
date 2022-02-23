@@ -1,14 +1,16 @@
 {
   "name": "rosetta-node-sdk",
-  "version": "1.4.1b",
+  "version": "1.4.1",
   "description": "A Standard for Blockchain Interaction",
   "main": "index.js",
   "scripts": {
     "prestart": "npm install",
     "start": "node index.js",
-    "run-example": "node examples/server",
+    "run-example": "node examples/serverSkeleton",
     "eslint": "eslint .",
-    "test": "mocha --exit test"
+    "test": "mocha --exit test",
+    "test:coverage": "nyc npm run test",
+    "jsdoc": "jsdoc -c ./conf.json -r lib/ -d ./jsdoc"
   },
   "keywords": [
     "openapi-generator",
@@ -26,6 +28,7 @@
     "express": "^4.16.4",
     "express-openapi-validator": "^3.16.1",
     "js-yaml": "^3.3.0",
+    "nyc": "^15.1.0",
     "ono": "^5.0.1",
     "openapi-sampler": "^1.0.0-beta.15",
     "rosetta-node-sdk-client": "git+https://github.com/SmartArray/rosetta-node-sdk-client.git#1.4.1",
@@ -39,11 +42,29 @@
     "eslint": "^5.16.0",
     "eslint-config-airbnb-base": "^14.0.0",
     "eslint-plugin-import": "^2.17.2",
-    "mocha": "^7.1.1"
+    "mocha": "^7.1.1",
+    "babel-eslint": "^10.1.0"
   },
   "eslintConfig": {
     "env": {
       "node": true
     }
+  },
+  "nyc": {
+    "check-coverage": true,
+    "all": true,
+    "include": [
+      "lib/**/!(*.test.*).js?(x)"
+    ],
+    "exclude": [
+      "lib/server/**/*.*"
+    ],
+    "reporter": [
+      "html",
+      "lcov",
+      "text",
+      "text-summary"
+    ],
+    "report-dir": "coverage"
   }
 }

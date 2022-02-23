@@ -21,7 +21,6 @@
 
 // asserter.test.js
 
-// server.test.js
 const { expect } = require('chai');
 const fs = require('fs');
 const path = require('path');
@@ -40,7 +39,7 @@ const createTempDir = () => {
     fs.mkdtemp('rosetta-test', (err, dir) => {
       if (err) return reject();
       return fulfill(dir);
-    });    
+    });
   });
 };
 
@@ -55,10 +54,10 @@ describe('Asserter Tests', function () {
       current_block_identifier: T.BlockIdentifier.constructFromObject({
         index: 0,
         hash: 'block 0',
-      }),      
+      }),
       genesis_block_identifier: T.BlockIdentifier.constructFromObject({
         index: 100,
-        hash: 'block 100',        
+        hash: 'block 100',
       }),
       current_block_timestamp: RosettaSDK.Asserter.MinUnixEpoch + 1,
       peers: [
@@ -76,6 +75,21 @@ describe('Asserter Tests', function () {
         { peer_id: 'peer 1' },
       ],
     });
+
+    const invalidPeersNetworkStatus = T.NetworkStatusResponse.constructFromObject({
+      current_block_identifier: T.BlockIdentifier.constructFromObject({
+        index: 0,
+        hash: 'block 0',
+      }),
+      genesis_block_identifier: T.BlockIdentifier.constructFromObject({
+        index: 100,
+        hash: 'block 100',
+      }),
+      current_block_timestamp: RosettaSDK.Asserter.MinUnixEpoch + 1,
+      peers: ['peer 1'],
+    });
+
+    const invalidPeerNetworkStatus = { ...invalidPeersNetworkStatus, peers: 'peer err' };
 
     const validNetworkOptions = T.NetworkOptionsResponse.constructFromObject({
       version: new T.Version('1.4.1', '1.0'),
@@ -100,7 +114,7 @@ describe('Asserter Tests', function () {
           new T.Error(1, 'error', true),
         ],
       }),
-    });    
+    });
 
     const duplicateStatuses = T.NetworkOptionsResponse.constructFromObject({
       version: new T.Version('1.4.1', '1.0'),
@@ -114,7 +128,7 @@ describe('Asserter Tests', function () {
           new T.Error(1, 'error', true),
         ],
       }),
-    });     
+    });
 
     const duplicateTypes = T.NetworkOptionsResponse.constructFromObject({
       version: new T.Version('1.4.1', '1.0'),
@@ -125,7 +139,7 @@ describe('Asserter Tests', function () {
           new T.Error(1, 'error', true),
         ],
       }),
-    });  
+    });
 
     const tests = {
       "valid responses": {
@@ -141,6 +155,20 @@ describe('Asserter Tests', function () {
         networkOptions: validNetworkOptions,
 
         err: "BlockIdentifier is null",
+      },
+      "invalid peers in network status": {
+        network:        validNetwork,
+        networkStatus:  invalidPeersNetworkStatus,
+        networkOptions: validNetworkOptions,
+
+        err: "Peer.peer_id is missing",
+      },
+      "invalid peer type in network status": {
+        network:        validNetwork,
+        networkStatus:  invalidPeerNetworkStatus,
+        networkOptions: validNetworkOptions,
+
+        err: "Peers must be an array.",
       },
       "invalid network options": {
         network:        validNetwork,
@@ -197,7 +225,7 @@ describe('Asserter Tests', function () {
         }
 
         expect(thrown).to.equal(false);
-        expect(configuration.network_identifier).to.equal(testParams.network)
+        expect(configuration.network_identifier).to.equal(testParams.network);
         expect(configuration.genesis_block_identifier).to.equal(testParams.networkStatus.genesis_block_identifier);
         expect(configuration.allowed_operation_types).to.deep.equal(testParams.networkOptions.allow.operation_types);
         expect(configuration.allowed_operation_statuses).to.deep.equal(testParams.networkOptions.allow.operation_statuses);
@@ -244,12 +272,12 @@ describe('Asserter Tests', function () {
         } catch (f) {
           // console.error(f);
           thrown = true;
-        }    
+        }
 
         expect(thrown).to.equal(false);
 
         expect((configuration.network_identifier))
-          .to.deep.equal(c(testParams.network))
+          .to.deep.equal(c(testParams.network));
 
         expect((configuration.genesis_block_identifier))
           .to.deep.equal((testParams.networkStatus.genesis_block_identifier));
@@ -259,8 +287,25 @@ describe('Asserter Tests', function () {
 
         expect((configuration.allowed_operation_statuses))
           .to.deep.equal((testParams.networkOptions.allow.operation_statuses));
-      });        
-    } 
+      });
+    }
+
+    it(`should fail due to a null network status`, function () {
+      let thrown = false;
+
+      try {
+        RosettaSDK.Asserter.NewClientWithResponses(
+          validNetwork,
+          null,
+          validNetworkOptions,
+        );
+      } catch (e) {
+        expect(e.message).to.equal('networkStatusResponse is null');
+        thrown = true;
+      }
+
+      expect(thrown).to.equal(true);
+    });
   });
 
   describe('Block Tests', function () {
@@ -274,7 +319,7 @@ describe('Asserter Tests', function () {
         asserter.BlockIdentifier(block);
       } catch (e) {
         console.error(e);
-        thrown = true; 
+        thrown = true;
       }
 
       expect(thrown).to.equal(false);
@@ -290,7 +335,7 @@ describe('Asserter Tests', function () {
         // console.error(e);
         expect(e.name).to.equal('AsserterError');
         expect(e.message).to.equal('BlockIdentifier is null');
-        thrown = true; 
+        thrown = true;
       }
 
       expect(thrown).to.equal(true);
@@ -306,7 +351,7 @@ describe('Asserter Tests', function () {
         // console.error(e);
         expect(e.name).to.equal('AsserterError');
         expect(e.message).to.equal('BlockIdentifier.index is negative');
-        thrown = true; 
+        thrown = true;
       }
 
       expect(thrown).to.equal(true);
@@ -322,7 +367,7 @@ describe('Asserter Tests', function () {
         // console.error(e);
         expect(e.name).to.equal('AsserterError');
         expect(e.message).to.equal('BlockIdentifier.hash is missing');
-        thrown = true; 
+        thrown = true;
       }
 
       expect(thrown).to.equal(true);
@@ -341,7 +386,7 @@ describe('Asserter Tests', function () {
         asserter.Amount(amount);
       } catch (e) {
         console.error(e);
-        thrown = true; 
+        thrown = true;
       }
 
       expect(thrown).to.equal(false);
@@ -355,7 +400,7 @@ describe('Asserter Tests', function () {
         asserter.Amount(amount);
       } catch (e) {
         console.error(e);
-        thrown = true; 
+        thrown = true;
       }
 
       expect(thrown).to.equal(false);
@@ -369,7 +414,7 @@ describe('Asserter Tests', function () {
         asserter.Amount(amount);
       } catch (e) {
         console.error(e);
-        thrown = true; 
+        thrown = true;
       }
 
       expect(thrown).to.equal(false);
@@ -385,11 +430,11 @@ describe('Asserter Tests', function () {
         // console.error(e);
         expect(e.name).to.equal('AsserterError');
         expect(e.message).to.equal('Amount.value is missing');
-        thrown = true; 
+        thrown = true;
       }
 
       expect(thrown).to.equal(true);
-    });    
+    });
 
     it('should throw when currency is missing', async function () {
       let thrown = false;
@@ -401,11 +446,11 @@ describe('Asserter Tests', function () {
         // console.error(e);
         expect(e.name).to.equal('AsserterError');
         expect(e.message).to.equal('Amount.currency is null');
-        thrown = true; 
+        thrown = true;
       }
 
       expect(thrown).to.equal(true);
-    });       
+    });
 
     it('should throw if amount.value is not a number', async function () {
       let thrown = false;
@@ -417,11 +462,11 @@ describe('Asserter Tests', function () {
         // console.error(e);
         expect(e.name).to.equal('AsserterError');
         expect(e.message).to.equal('Amount.value is not an integer: xxxx');
-        thrown = true; 
+        thrown = true;
       }
 
       expect(thrown).to.equal(true);
-    });  
+    });
 
     it('should throw when detecting a non-int', async function () {
       let thrown = false;
@@ -433,11 +478,11 @@ describe('Asserter Tests', function () {
         // console.error(e);
         expect(e.name).to.equal('AsserterError');
         expect(e.message).to.equal('Amount.value is not an integer: 1.1');
-        thrown = true; 
+        thrown = true;
       }
 
       expect(thrown).to.equal(true);
-    });   
+    });
 
     it('should throw when passing an invalid symbol', async function () {
       let thrown = false;
@@ -449,11 +494,11 @@ describe('Asserter Tests', function () {
         // console.error(e);
         expect(e.name).to.equal('AsserterError');
         expect(e.message).to.equal('Amount.currency does not have a symbol');
-        thrown = true; 
+        thrown = true;
       }
 
-      expect(thrown).to.equal(true);      
-    });     
+      expect(thrown).to.equal(true);
+    });
 
     it('should throw when detecting invalid decimals', async function () {
       let thrown = false;
@@ -465,11 +510,11 @@ describe('Asserter Tests', function () {
         // console.error(e);
         expect(e.name).to.equal('AsserterError');
         expect(e.message).to.equal('Amount.currency.decimals must be positive. Found: -1');
-        thrown = true; 
+        thrown = true;
       }
 
-      expect(thrown).to.equal(true); 
-    });     
+      expect(thrown).to.equal(true);
+    });
   });
 
   describe('Test OperationIdentifier', function () {
@@ -488,10 +533,10 @@ describe('Asserter Tests', function () {
         asserter.OperationIdentifier(opId, index);
       } catch (e) {
         console.error(e);
-        thrown = true; 
+        thrown = true;
       }
 
-      expect(thrown).to.equal(false);       
+      expect(thrown).to.equal(false);
     });
 
     it('should throw when passing null as identifier', async function () {
@@ -505,11 +550,11 @@ describe('Asserter Tests', function () {
         // console.error(e);
         expect(e.name).to.equal('AsserterError');
         expect(e.message).to.equal('OperationIdentifier is null');
-        thrown = true; 
+        thrown = true;
       }
 
-      expect(thrown).to.equal(true);       
-    });    
+      expect(thrown).to.equal(true);
+    });
 
     it('should throw when passing out of order index', async function () {
       let thrown = false;
@@ -522,11 +567,11 @@ describe('Asserter Tests', function () {
         // console.error(e);
         expect(e.name).to.equal('AsserterError');
         expect(e.message).to.equal('OperationIdentifier.index 0 is out of order, expected 1');
-        thrown = true; 
+        thrown = true;
       }
 
-      expect(thrown).to.equal(true);       
-    });      
+      expect(thrown).to.equal(true);
+    });
 
     it('should assert a valid identifier with a networkIndex properly', async function () {
       let thrown = false;
@@ -541,11 +586,11 @@ describe('Asserter Tests', function () {
         // console.error(e);
         expect(e.name).to.equal('AsserterError');
         expect(e.message).to.equal('OperationIdentifier.index 0 is out of order, expected 1');
-        thrown = true; 
+        thrown = true;
       }
 
-      expect(thrown).to.equal(false);       
-    });   
+      expect(thrown).to.equal(false);
+    });
 
     it('should throw when passing a valid identifier with an invalid networkIndex', async function () {
       let thrown = false;
@@ -560,17 +605,17 @@ describe('Asserter Tests', function () {
         // console.error(e);
         expect(e.name).to.equal('AsserterError');
         expect(e.message).to.equal('OperationIdentifier.network_index is invalid');
-        thrown = true; 
+        thrown = true;
       }
 
-      expect(thrown).to.equal(true);       
-    });  
+      expect(thrown).to.equal(true);
+    });
   });
 
   describe('Test AccountIdentifier', function () {
     const asserter = new RosettaSDK.Asserter();
-    const { AccountIdentifier, SubAccountIdentifier } = RosettaSDK.Client;   
-    
+    const { AccountIdentifier, SubAccountIdentifier } = RosettaSDK.Client;
+
     it('should assert a valid identifier properly', async function () {
       let thrown = false;
 
@@ -579,11 +624,11 @@ describe('Asserter Tests', function () {
         asserter.AccountIdentifier(accId);
       } catch (e) {
         console.error(e);
-        thrown = true; 
+        thrown = true;
       }
 
-      expect(thrown).to.equal(false);        
-    }); 
+      expect(thrown).to.equal(false);
+    });
 
     it('should throw when passing an invalid address', async function () {
       let thrown = false;
@@ -595,11 +640,11 @@ describe('Asserter Tests', function () {
         // console.error(e);
         expect(e.name).to.equal('AsserterError');
         expect(e.message).to.equal('Account.address is missing');
-        thrown = true; 
+        thrown = true;
       }
 
-      expect(thrown).to.equal(true);        
-    }); 
+      expect(thrown).to.equal(true);
+    });
 
     it('should assert a valid identifier with subaccount', async function () {
       let thrown = false;
@@ -610,11 +655,11 @@ describe('Asserter Tests', function () {
         asserter.AccountIdentifier(accId);
       } catch (e) {
         console.error(e);
-        thrown = true; 
+        thrown = true;
       }
 
-      expect(thrown).to.equal(false);        
-    }); 
+      expect(thrown).to.equal(false);
+    });
 
     it('throw when passing an invalid identifier with subaccount', async function () {
       let thrown = false;
@@ -627,11 +672,11 @@ describe('Asserter Tests', function () {
         // console.error(e);
         expect(e.name).to.equal('AsserterError');
         expect(e.message).to.equal('Account.sub_account.address is missing');
-        thrown = true; 
+        thrown = true;
       }
 
-      expect(thrown).to.equal(true);        
-    }); 
+      expect(thrown).to.equal(true);
+    });
   });
 
   describe('Test Operation', function () {
@@ -644,13 +689,13 @@ describe('Asserter Tests', function () {
       AccountIdentifier,
       NetworkIdentifier,
       BlockIdentifier,
-      Peer, 
+      Peer,
       NetworkOptionsResponse,
       NetworkStatusResponse,
       Version,
       Allow,
       OperationStatus,
-    } = RosettaSDK.Client;      
+    } = RosettaSDK.Client;
 
     const validAmount = new Amount('1000', new Currency('BTC', 8));
     const validAccount = new AccountIdentifier('test');
@@ -810,7 +855,7 @@ describe('Asserter Tests', function () {
         } catch (e) {
           // console.error(e);
           expect(e.message).to.equal(testParams.err);
-          thrown = true;   
+          thrown = true;
         }
 
         expect(thrown).to.equal(testParams.err != null);
@@ -848,13 +893,13 @@ describe('Asserter Tests', function () {
       let response = new ConstructionMetadataResponse(metadata);
 
       try {
-        asserter.ConstructionMetadataResponse(response)
+        asserter.ConstructionMetadataResponse(response);
       } catch (e) {
         console.error(e);
         thrown = true;
       }
 
-      expect(thrown).to.equal(false);      
+      expect(thrown).to.equal(false);
     });
 
     it('should throw on a null response', async function () {
@@ -866,7 +911,7 @@ describe('Asserter Tests', function () {
       let response = null;
 
       try {
-        asserter.ConstructionMetadataResponse(response)
+        asserter.ConstructionMetadataResponse(response);
       } catch (e) {
         // console.error(e);
         expect(e.name).to.equal('AsserterError');
@@ -874,8 +919,8 @@ describe('Asserter Tests', function () {
         thrown = true;
       }
 
-      expect(thrown).to.equal(true);      
-    });   
+      expect(thrown).to.equal(true);
+    });
 
     it('should throw on invalid metadata', async function () {
       let thrown = false;
@@ -884,7 +929,7 @@ describe('Asserter Tests', function () {
       let response = new ConstructionMetadataResponse(metadata);
 
       try {
-        asserter.ConstructionMetadataResponse(response)
+        asserter.ConstructionMetadataResponse(response);
       } catch (e) {
         // console.error(e);
         expect(e.name).to.equal('AsserterError');
@@ -892,8 +937,8 @@ describe('Asserter Tests', function () {
         thrown = true;
       }
 
-      expect(thrown).to.equal(true);      
-    });    
+      expect(thrown).to.equal(true);
+    });
   });
 
   describe('Test TransactionIdentifierResponse', function () {
@@ -917,7 +962,7 @@ describe('Asserter Tests', function () {
         thrown = true;
       }
 
-      expect(thrown).to.equal(false);         
+      expect(thrown).to.equal(false);
     });
 
     it('should throw when passing null', async function () {
@@ -932,7 +977,7 @@ describe('Asserter Tests', function () {
         thrown = true;
       }
 
-      expect(thrown).to.equal(true);         
+      expect(thrown).to.equal(true);
     });
 
     it('should throw when transaction identifier is invalid', async function () {
@@ -948,7 +993,7 @@ describe('Asserter Tests', function () {
         thrown = true;
       }
 
-      expect(thrown).to.equal(true);         
+      expect(thrown).to.equal(true);
     });
   });
 
@@ -958,7 +1003,7 @@ describe('Asserter Tests', function () {
     const {
       ConstructionCombineResponse,
       TransactionIdentifier,
-    } = RosettaSDK.Client;    
+    } = RosettaSDK.Client;
 
     it('should assert a valid response properly', async function () {
       let thrown = false;
@@ -972,7 +1017,7 @@ describe('Asserter Tests', function () {
       }
 
       expect(thrown).to.equal(false);
-    });  
+    });
 
     it('should throw when passing null', async function () {
       let thrown = true;
@@ -984,7 +1029,7 @@ describe('Asserter Tests', function () {
         expect(e.message).to.equal('constructionCombineResponse cannot be null');
       }
 
-      expect(thrown).to.equal(true);      
+      expect(thrown).to.equal(true);
     });
 
     it('should throw when the signed transaction is empty', async function () {
@@ -998,7 +1043,7 @@ describe('Asserter Tests', function () {
         expect(e.message).to.equal('constructionCombineResponse.signed_transaction must be a string');
       }
 
-      expect(thrown).to.equal(true);     
+      expect(thrown).to.equal(true);
     });
   });
 
@@ -1007,7 +1052,7 @@ describe('Asserter Tests', function () {
 
     const {
       ConstructionDeriveResponse,
-    } = RosettaSDK.Client;    
+    } = RosettaSDK.Client;
 
     it('should assert a valid response properly', async function () {
       let thrown = false;
@@ -1024,7 +1069,7 @@ describe('Asserter Tests', function () {
       }
 
       expect(thrown).to.equal(false);
-    });  
+    });
 
     it('should throw when passing null', async function () {
       let thrown = true;
@@ -1036,7 +1081,7 @@ describe('Asserter Tests', function () {
         expect(e.message).to.equal('constructionDeriveResponse cannot be null');
       }
 
-      expect(thrown).to.equal(true);      
+      expect(thrown).to.equal(true);
     });
 
     it('should throw when the address is empty', async function () {
@@ -1053,7 +1098,7 @@ describe('Asserter Tests', function () {
         expect(e.message).to.equal('constructionDeriveResponse.address must be a string');
       }
 
-      expect(thrown).to.equal(true);     
+      expect(thrown).to.equal(true);
     });
   });
 
@@ -1073,7 +1118,7 @@ describe('Asserter Tests', function () {
       Version,
       Allow,
       OperationStatus,
-    } = RosettaSDK.Client;    
+    } = RosettaSDK.Client;
 
     const validAmount = new Amount('1000', new Currency('BTC', 8));
     const validAccount = new AccountIdentifier('test');
@@ -1240,7 +1285,7 @@ describe('Asserter Tests', function () {
         }),
         signed: false,
         err:    null,
-      },      
+      },
     };
 
     const asserter = RosettaSDK.Asserter.NewClientWithResponses(
@@ -1274,7 +1319,7 @@ describe('Asserter Tests', function () {
         } catch (e) {
           thrown = true;
 
-          expect(e.message).to.equal(testParams.err)
+          expect(e.message).to.equal(testParams.err);
         }
 
         expect(thrown).to.equal(testParams.err != null);
@@ -1282,13 +1327,13 @@ describe('Asserter Tests', function () {
     }
   });
 
-  describe('Test ConstructionPayloadsResponse', function () {  
+  describe('Test ConstructionPayloadsResponse', function () {
     const asserter = new RosettaSDK.Asserter();
 
     const {
       ConstructionPayloadsResponse,
       SigningPayload,
-    } = RosettaSDK.Client;       
+    } = RosettaSDK.Client;
 
     it('should assert a valid response properly', async function () {
       let thrown = false;
@@ -1301,11 +1346,11 @@ describe('Asserter Tests', function () {
       try {
         asserter.ConstructionPayloadsResponse(response);
       } catch (e) {
-        console.log(e)
+        console.log(e);
         thrown = true;
       }
 
-      expect(thrown).to.equal(false);      
+      expect(thrown).to.equal(false);
     });
 
     it('should throw when passing null', async function () {
@@ -1318,7 +1363,7 @@ describe('Asserter Tests', function () {
         thrown = true;
       }
 
-      expect(thrown).to.equal(true);      
+      expect(thrown).to.equal(true);
     });
 
     it('should throw when the unsigned transaction is empty', async function () {
@@ -1336,7 +1381,7 @@ describe('Asserter Tests', function () {
         expect(e.message).to.equal('unsigned transaction cannot be empty');
       }
 
-      expect(thrown).to.equal(true);      
+      expect(thrown).to.equal(true);
     });
 
     it('should throw when the signing payload is empty', async function () {
@@ -1352,7 +1397,7 @@ describe('Asserter Tests', function () {
         expect(e.message).to.equal('signing payloads cannot be empty');
       }
 
-      expect(thrown).to.equal(true);   
+      expect(thrown).to.equal(true);
     });
 
     it('should throw when the signing payload is invalid', async function () {
@@ -1370,17 +1415,17 @@ describe('Asserter Tests', function () {
         expect(e.message).to.equal('Signing Payload 0 is invalid: signing payload cannot be empty');
       }
 
-      expect(thrown).to.equal(true);  
+      expect(thrown).to.equal(true);
     });
   });
 
-  describe('Test PublicKey', function () {  
+  describe('Test PublicKey', function () {
     const asserter = new RosettaSDK.Asserter();
 
     const {
       PublicKey,
       CurveType,
-    } = RosettaSDK.Client;       
+    } = RosettaSDK.Client;
 
     it('should assert a valid public key properly', async function () {
       let thrown = false;
@@ -1389,11 +1434,11 @@ describe('Asserter Tests', function () {
       try {
         asserter.PublicKey(pk);
       } catch (e) {
-        console.log(e)
+        console.log(e);
         thrown = true;
       }
 
-      expect(thrown).to.equal(false);      
+      expect(thrown).to.equal(false);
     });
 
     it('should throw when passing null', async function () {
@@ -1406,7 +1451,7 @@ describe('Asserter Tests', function () {
         thrown = true;
       }
 
-      expect(thrown).to.equal(true);      
+      expect(thrown).to.equal(true);
     });
 
     it('should throw the public key is empty', async function () {
@@ -1420,7 +1465,7 @@ describe('Asserter Tests', function () {
         expect(e.message).to.equal('public key bytes cannot be empty');
       }
 
-      expect(thrown).to.equal(true);      
+      expect(thrown).to.equal(true);
     });
 
     it('should throw when the curveType is invalid', async function () {
@@ -1434,17 +1479,17 @@ describe('Asserter Tests', function () {
         expect(e.message).to.equal('public key curve type is not supported: "test" is not a supported CurveType');
       }
 
-      expect(thrown).to.equal(true);   
+      expect(thrown).to.equal(true);
     });
   });
 
-  describe('Test SigningPayload', function () {  
+  describe('Test SigningPayload', function () {
     const asserter = new RosettaSDK.Asserter();
 
     const {
       SigningPayload,
       SignatureType,
-    } = RosettaSDK.Client;       
+    } = RosettaSDK.Client;
 
     it('should assert a valid signing payload properly', async function () {
       let thrown = false;
@@ -1453,11 +1498,11 @@ describe('Asserter Tests', function () {
       try {
         asserter.SigningPayload(signature);
       } catch (e) {
-        console.log(e)
+        console.log(e);
         thrown = true;
       }
 
-      expect(thrown).to.equal(false);      
+      expect(thrown).to.equal(false);
     });
 
     it('should assert a valid signing payload with signature type properly', async function () {
@@ -1467,11 +1512,11 @@ describe('Asserter Tests', function () {
       try {
         asserter.SigningPayload(signature);
       } catch (e) {
-        console.log(e)
+        console.log(e);
         thrown = true;
       }
 
-      expect(thrown).to.equal(false);      
+      expect(thrown).to.equal(false);
     });
 
     it('should throw when passing null', async function () {
@@ -1484,7 +1529,7 @@ describe('Asserter Tests', function () {
         thrown = true;
       }
 
-      expect(thrown).to.equal(true);      
+      expect(thrown).to.equal(true);
     });
 
     it('should throw the address is empty', async function () {
@@ -1498,7 +1543,7 @@ describe('Asserter Tests', function () {
         expect(e.message).to.equal('signing payload cannot be empty');
       }
 
-      expect(thrown).to.equal(true);      
+      expect(thrown).to.equal(true);
     });
 
     it('should throw the signing bytes are empty', async function () {
@@ -1512,7 +1557,7 @@ describe('Asserter Tests', function () {
         expect(e.message).to.equal('signing payload bytes cannot be empty');
       }
 
-      expect(thrown).to.equal(true);      
+      expect(thrown).to.equal(true);
     });
 
     it('should throw when the signature type is invalid', async function () {
@@ -1527,7 +1572,7 @@ describe('Asserter Tests', function () {
         expect(e.message).to.equal('signature payload type is not valid: "nope" is not a supported SignatureType');
       }
 
-      expect(thrown).to.equal(true);   
+      expect(thrown).to.equal(true);
     });
   });
 
@@ -1541,7 +1586,7 @@ describe('Asserter Tests', function () {
       CurveType,
       Signature,
       AccountIdentifier,
-    } = RosettaSDK.Client; 
+    } = RosettaSDK.Client;
 
     const validPublicKey = new PublicKey('affe', new CurveType().secp256k1);
     const validAccount = new AccountIdentifier('test');
@@ -1559,7 +1604,7 @@ describe('Asserter Tests', function () {
           validPublicKey,
           new SignatureType().ed25519,
           'ffff',
-        ),      
+        ),
       ];
 
       try {
@@ -1596,13 +1641,13 @@ describe('Asserter Tests', function () {
           validPublicKey,
           new SignatureType().ed25519,
           'ffee',
-        ),        
+        ),
       ];
 
       try {
         asserter.Signatures(signatures);
       } catch (e) {
-        console.error(e)
+        console.error(e);
         thrown = true;
       }
 
@@ -1629,7 +1674,7 @@ describe('Asserter Tests', function () {
       try {
         asserter.Signatures(signatures);
       } catch (e) {
-        console.error(e)
+        console.error(e);
         thrown = true;
       }
 
@@ -1737,7 +1782,7 @@ describe('Asserter Tests', function () {
   //       thrown = true;
   //     }
 
-  //     expect(thrown).to.equal(false);      
+  //     expect(thrown).to.equal(false);
   //   });
 
   //   it('should throw on a null response', async function () {
@@ -1750,12 +1795,12 @@ describe('Asserter Tests', function () {
   //     } catch (e) {
   //       // console.error(e);
   //       expect(e.name).to.equal('AsserterError');
-  //       expect(e.message).to.equal('ConstructionSubmitResponse cannot be null');        
+  //       expect(e.message).to.equal('ConstructionSubmitResponse cannot be null');
   //       thrown = true;
   //     }
 
-  //     expect(thrown).to.equal(true);      
-  //   });   
+  //     expect(thrown).to.equal(true);
+  //   });
 
   //   it('should throw on invalid transaction identifier', async function () {
   //     let thrown = false;
@@ -1768,12 +1813,12 @@ describe('Asserter Tests', function () {
   //     } catch (e) {
   //       // console.error(e);
   //       expect(e.name).to.equal('AsserterError');
-  //       expect(e.message).to.equal('TransactionIdentifier is null');        
+  //       expect(e.message).to.equal('TransactionIdentifier is null');
   //       thrown = true;
   //     }
 
-  //     expect(thrown).to.equal(true);       
-  //   });    
+  //     expect(thrown).to.equal(true);
+  //   });
   // });
 
   describe('Network Tests', function () {
@@ -1795,7 +1840,7 @@ describe('Asserter Tests', function () {
         thrown = true;
       }
 
-      expect(thrown).to.equal(false);       
+      expect(thrown).to.equal(false);
     });
 
     it('should throw when network is null', async function () {
@@ -1811,9 +1856,9 @@ describe('Asserter Tests', function () {
         expect(e.message).to.equal('NetworkIdentifier is null');
         thrown = true;
       }
-      
-      expect(thrown).to.equal(true);       
-    });   
+
+      expect(thrown).to.equal(true);
+    });
 
     it('should throw when asserting an invalid network (blockchain missing)', async function () {
       let thrown = false;
@@ -1824,11 +1869,11 @@ describe('Asserter Tests', function () {
         asserter.NetworkIdentifier(network);
       } catch (e) {
         expect(e.name).to.equal('AsserterError');
-        expect(e.message).to.equal('NetworkIdentifier.blockchain is missing');        
+        expect(e.message).to.equal('NetworkIdentifier.blockchain is missing');
         thrown = true;
       }
 
-      expect(thrown).to.equal(true);       
+      expect(thrown).to.equal(true);
     });
 
     it('should throw when asserting an invalid network (network missing)', async function () {
@@ -1840,12 +1885,12 @@ describe('Asserter Tests', function () {
         asserter.NetworkIdentifier(network);
       } catch (e) {
         expect(e.name).to.equal('AsserterError');
-        expect(e.message).to.equal('NetworkIdentifier.network is missing');        
+        expect(e.message).to.equal('NetworkIdentifier.network is missing');
         thrown = true;
       }
 
-      expect(thrown).to.equal(true);       
-    });    
+      expect(thrown).to.equal(true);
+    });
 
     it('should correctly assert a valid subnetwork', async function () {
       let thrown = false;
@@ -1859,8 +1904,8 @@ describe('Asserter Tests', function () {
         thrown = true;
       }
 
-      expect(thrown).to.equal(false);       
-    });   
+      expect(thrown).to.equal(false);
+    });
 
     it('should throw when passing an invalid subnetwork', async function () {
       let thrown = false;
@@ -1872,12 +1917,12 @@ describe('Asserter Tests', function () {
         asserter.NetworkIdentifier(network);
       } catch (e) {
         expect(e.name).to.equal('AsserterError');
-        expect(e.message).to.equal('NetworkIdentifier.sub_network_identifier.network is missing');        
+        expect(e.message).to.equal('NetworkIdentifier.sub_network_identifier.network is missing');
         thrown = true;
       }
 
-      expect(thrown).to.equal(true);       
-    });    
+      expect(thrown).to.equal(true);
+    });
   });
 
   describe('Test Version', function () {
@@ -1944,7 +1989,7 @@ describe('Asserter Tests', function () {
       }
 
       expect(thrown).to.equal(false);
-    });  
+    });
 
     it('should throw on null version', async function () {
       let thrown = false;
@@ -1956,12 +2001,12 @@ describe('Asserter Tests', function () {
       } catch(e) {
         // console.error(e);
         expect(e.name).to.equal('AsserterError');
-        expect(e.message).to.equal('Version is null');             
+        expect(e.message).to.equal('Version is null');
         thrown = true;
       }
 
       expect(thrown).to.equal(true);
-    }); 
+    });
 
     it('should throw on invalid node version', async function () {
       let thrown = false;
@@ -1975,12 +2020,12 @@ describe('Asserter Tests', function () {
       } catch(e) {
         // console.error(e);
         expect(e.name).to.equal('AsserterError');
-        expect(e.message).to.equal('Version.node_version is missing');             
+        expect(e.message).to.equal('Version.node_version is missing');
         thrown = true;
       }
 
       expect(thrown).to.equal(true);
-    });     
+    });
 
     it('should throw on invalid middleware version', async function () {
       let thrown = false;
@@ -1996,12 +2041,12 @@ describe('Asserter Tests', function () {
       } catch(e) {
         // console.error(e);
         expect(e.name).to.equal('AsserterError');
-        expect(e.message).to.equal('Version.middleware_version is missing');             
+        expect(e.message).to.equal('Version.middleware_version is missing');
         thrown = true;
       }
 
       expect(thrown).to.equal(true);
-    });      
+    });
   });
 
   describe('Test Allow', function () {
@@ -2010,12 +2055,12 @@ describe('Asserter Tests', function () {
     const {
       OperationStatus,
       Allow,
-    } = RosettaSDK.Client;    
+    } = RosettaSDK.Client;
 
     const operationStatuses = [
       new OperationStatus('SUCCESS', true),
       new OperationStatus('FAILURE', false),
-    ];  
+    ];
 
     const operationTypes = ['PAYMENT'];
 
@@ -2034,6 +2079,22 @@ describe('Asserter Tests', function () {
       expect(thrown).to.equal(false);
     });
 
+    it('should throw when empty type is passed', async function () {
+      let thrown = false;
+
+      let allow = new Allow(operationStatuses, ['']);
+
+      try {
+        asserter.Allow(allow);
+      } catch(e) {
+        expect(e.name).to.equal('AsserterError');
+        expect(e.message).to.equal(`Allow.operation_statuses has an empty string`);
+        thrown = true;
+      }
+
+      expect(thrown).to.equal(true);
+    });
+
     it('should throw when null is passed', async function () {
       let thrown = false;
 
@@ -2044,12 +2105,12 @@ describe('Asserter Tests', function () {
 
       } catch(e) {
         expect(e.name).to.equal('AsserterError');
-        expect(e.message).to.equal('Allow is null');          
+        expect(e.message).to.equal('Allow is null');
         thrown = true;
       }
 
       expect(thrown).to.equal(true);
-    });    
+    });
 
     it('should throw when no operationStatuses are found', async function () {
       let thrown = false;
@@ -2061,12 +2122,12 @@ describe('Asserter Tests', function () {
 
       } catch(e) {
         expect(e.name).to.equal('AsserterError');
-        expect(e.message).to.equal('No Allow.operation_statuses found');          
+        expect(e.message).to.equal('No Allow.operation_statuses found');
         thrown = true;
       }
 
       expect(thrown).to.equal(true);
-    });    
+    });
 
     it('should throw when no successful statuses are found', async function () {
       let thrown = false;
@@ -2078,13 +2139,13 @@ describe('Asserter Tests', function () {
 
       } catch(e) {
         expect(e.name).to.equal('AsserterError');
-        expect(e.message).to.equal('No successful Allow.operation_statuses found');          
+        expect(e.message).to.equal('No successful Allow.operation_statuses found');
         thrown = true;
       }
 
       expect(thrown).to.equal(true);
-    });    
-    
+    });
+
     it('should throw when no operation types exist', async function () {
       let thrown = false;
 
@@ -2096,12 +2157,12 @@ describe('Asserter Tests', function () {
       } catch(e) {
         // console.error(e)
         expect(e.name).to.equal('AsserterError');
-        expect(e.message).to.equal('No Allow.operation_statuses found');          
+        expect(e.message).to.equal('No Allow.operation_statuses found');
         thrown = true;
       }
 
       expect(thrown).to.equal(true);
-    });        
+    });
   });
 
   describe('Test Error', function () {
@@ -2131,7 +2192,7 @@ describe('Asserter Tests', function () {
       } catch (e) {
         // console.error(e);
         expect(e.name).to.equal('AsserterError');
-        expect(e.message).to.equal('Error is null');       
+        expect(e.message).to.equal('Error is null');
         thrown = true;
       }
 
@@ -2148,7 +2209,7 @@ describe('Asserter Tests', function () {
       } catch (e) {
         // console.error(e);
         expect(e.name).to.equal('AsserterError');
-        expect(e.message).to.equal('Error.code is negative');       
+        expect(e.message).to.equal('Error.code is negative');
         thrown = true;
       }
 
@@ -2165,7 +2226,7 @@ describe('Asserter Tests', function () {
       } catch (e) {
         // console.error(e);
         expect(e.name).to.equal('AsserterError');
-        expect(e.message).to.equal('Error.message is missing');       
+        expect(e.message).to.equal('Error.message is missing');
         thrown = true;
       }
 
@@ -2206,12 +2267,12 @@ describe('Asserter Tests', function () {
       } catch (e) {
         // console.error(e)
         expect(e.name).to.equal('AsserterError');
-        expect(e.message).to.equal('Error code used multiple times');           
+        expect(e.message).to.equal('Error code used multiple times');
         thrown = true;
       }
 
       expect(thrown).to.equal(true);
-    });    
+    });
   });
 
   describe('Test Valid Network List Response', function () {
@@ -2261,7 +2322,7 @@ describe('Asserter Tests', function () {
       } catch(e) {
         // console.error(e);
         expect(e.name).to.equal('AsserterError');
-        expect(e.message).to.equal('NetworkListResponse is null');        
+        expect(e.message).to.equal('NetworkListResponse is null');
         thrown = true;
       }
 
@@ -2275,13 +2336,13 @@ describe('Asserter Tests', function () {
         network1Sub,
         network1Sub,
       ]);
-      
+
       try {
         asserter.NetworkListResponse(networkListResponse);
       } catch(e) {
         // console.error(e);
         expect(e.name).to.equal('AsserterError');
-        expect(e.message).to.equal('NetworkListResponse.Network contains duplicated');        
+        expect(e.message).to.equal('NetworkListResponse.Network contains duplicated');
         thrown = true;
       }
 
@@ -2294,18 +2355,18 @@ describe('Asserter Tests', function () {
       const networkListResponse = new NetworkListResponse([
         network3,
       ]);
-      
+
       try {
         asserter.NetworkListResponse(networkListResponse);
       } catch(e) {
         // console.error(e);
         expect(e.name).to.equal('AsserterError');
-        expect(e.message).to.equal('NetworkIdentifier.blockchain is missing');        
+        expect(e.message).to.equal('NetworkIdentifier.blockchain is missing');
         thrown = true;
       }
 
       expect(thrown).to.equal(true);
-    });            
+    });
   });
 
   describe('Test Block', function () {
@@ -2321,13 +2382,13 @@ describe('Asserter Tests', function () {
       Block,
       Transaction,
       TransactionIdentifier,
-      Peer, 
+      Peer,
       NetworkOptionsResponse,
       NetworkStatusResponse,
       Version,
       Allow,
       OperationStatus,
-    } = RosettaSDK.Client;      
+    } = RosettaSDK.Client;
 
     const validBlockIdentifier = new BlockIdentifier(100, 'blah');
     const validParentBlockIdentifier = new BlockIdentifier(99, 'blah parent');
@@ -2366,7 +2427,7 @@ describe('Asserter Tests', function () {
           operation_identifier: new OperationIdentifier(0),
           related_operations: [
             new OperationIdentifier(0),
-          ],      
+          ],
           type: 'PAYMENT',
           status: 'SUCCESS',
           account: validAccount,
@@ -2382,7 +2443,7 @@ describe('Asserter Tests', function () {
           operation_identifier: new OperationIdentifier(1),
           related_operations: [
             new OperationIdentifier(0),
-          ],      
+          ],
           type: 'PAYMENT',
           status: 'SUCCESS',
           account: validAccount,
@@ -2406,7 +2467,7 @@ describe('Asserter Tests', function () {
           operation_identifier: new OperationIdentifier(0),
           related_operations: [
             new OperationIdentifier(1),
-          ],      
+          ],
           type: 'PAYMENT',
           status: 'SUCCESS',
           account: validAccount,
@@ -2417,7 +2478,7 @@ describe('Asserter Tests', function () {
           operation_identifier: new OperationIdentifier(1),
           related_operations: [
             new OperationIdentifier(0),
-          ],      
+          ],
           type: 'PAYMENT',
           status: 'SUCCESS',
           account: validAccount,
@@ -2442,14 +2503,14 @@ describe('Asserter Tests', function () {
           related_operations: [
             new OperationIdentifier(0),
             new OperationIdentifier(0),
-          ],      
+          ],
           type: 'PAYMENT',
           status: 'SUCCESS',
           account: validAccount,
           amount: validAmount,
         }),
       ],
-    );    
+    );
 
     const tests = {
       'valid block': {
@@ -2589,7 +2650,7 @@ describe('Asserter Tests', function () {
           ],
         }),
         err: 'TransactionIdentifier is null',
-      },      
+      },
     };
 
     for (let testName of Object.keys(tests)) {
@@ -2636,11 +2697,11 @@ describe('Asserter Tests', function () {
         } catch (e) {
           // console.error(e);
           expect(e.message).to.equal(testParams.err);
-          thrown = true;   
+          thrown = true;
         }
 
         expect(thrown).to.equal(testParams.err != null);
-      });      
+      });
 
     }
   });
@@ -2699,14 +2760,24 @@ describe('Asserter Tests', function () {
     const validBlockIdentifier = BlockIdentifier.constructFromObject({
         index: validBlockIndex,
         hash: 'block 1',
-      })
+      });
 
     const validTransactionIdentifier = new TransactionIdentifier('tx1');
 
     const validPublicKey = PublicKey.constructFromObject({
       hex_bytes: 'affe',
       curve_type: new CurveType().secp256k1,
-    })
+    });
+
+    const invalidPublicKey = PublicKey.constructFromObject({
+      hex_bytes: 'affe',
+      curve_type: 'abcd',
+    });
+
+    const invalidPublicKeyHex = PublicKey.constructFromObject({
+      hex_bytes: '!!!!',
+      curve_type: new CurveType().secp256k1,
+    });
 
     const validAmount = Amount.constructFromObject({
       value: '1000',
@@ -2774,7 +2845,6 @@ describe('Asserter Tests', function () {
       }),
     ];
 
-    
     const validSignatures = [
       {
         signing_payload: SigningPayload.constructFromObject({
@@ -2782,6 +2852,42 @@ describe('Asserter Tests', function () {
           hex_bytes: '1234abcd',
         }),
         public_key: validPublicKey,
+        signature_type: new SignatureType().ed25519,
+        hex_bytes: 'affe',
+      },
+    ];
+
+    const invalidSignatureType = [
+      {
+        signing_payload: SigningPayload.constructFromObject({
+          address: validAccount.address,
+          hex_bytes: '1234abcd',
+        }),
+        public_key: validPublicKey,
+        signature_type: 'abcd',
+        hex_bytes: 'affe',
+      },
+    ];
+
+    const invalidSignaturePublicKey = [
+      {
+        signing_payload: SigningPayload.constructFromObject({
+          address: validAccount.address,
+          hex_bytes: '1234abcd',
+        }),
+        public_key: invalidPublicKey,
+        signature_type: new SignatureType().ed25519,
+        hex_bytes: 'affe',
+      },
+    ];
+
+    const invalidSignaturePublicKeyHex = [
+      {
+        signing_payload: SigningPayload.constructFromObject({
+          address: validAccount.address,
+          hex_bytes: '1234abcd',
+        }),
+        public_key: invalidPublicKeyHex,
         signature_type: new SignatureType().ed25519,
         hex_bytes: 'affe',
       },
@@ -2824,7 +2930,7 @@ describe('Asserter Tests', function () {
         signature_type: new SignatureType().ed25519,
       },
     ];
-        
+
 
     const asserter = RosettaSDK.Asserter.NewServer(
       ['PAYMENT'],
@@ -2845,7 +2951,7 @@ describe('Asserter Tests', function () {
           asserter.SupportedNetworks(networks);
         } catch (e) {
           console.error(e);
-          thrown = true; 
+          thrown = true;
         }
 
         expect(thrown).to.equal(false);
@@ -2863,7 +2969,7 @@ describe('Asserter Tests', function () {
           // console.error(e);
           expect(e.name).to.equal('AsserterError');
           expect(e.message).to.equal('NetworkIdentifier Array contains no supported networks');
-          thrown = true; 
+          thrown = true;
         }
 
         expect(thrown).to.equal(true);
@@ -2881,8 +2987,8 @@ describe('Asserter Tests', function () {
         } catch (e) {
           // console.error(e);
           expect(e.name).to.equal('AsserterError');
-          expect(e.message).to.equal('NetworkIdentifier.network is missing');          
-          thrown = true; 
+          expect(e.message).to.equal('NetworkIdentifier.network is missing');
+          thrown = true;
         }
 
         expect(thrown).to.equal(true);
@@ -2901,12 +3007,12 @@ describe('Asserter Tests', function () {
         } catch (e) {
           // console.error(e);
           expect(e.name).to.equal('AsserterError');
-          expect(e.message).to.equal('SupportedNetwork has a duplicate: {"blockchain":"Bitcoin","network":"Mainnet"}');             
-          thrown = true; 
+          expect(e.message).to.equal('SupportedNetwork has a duplicate: {"blockchain":"Bitcoin","network":"Mainnet"}');
+          thrown = true;
         }
 
         expect(thrown).to.equal(true);
-      });      
+      });
     });
 
     describe('Test AccountBalanceRequest', function () {
@@ -2917,8 +3023,8 @@ describe('Asserter Tests', function () {
           [validNetworkIdentifier],
         );
 
-        return server;        
-      }
+        return server;
+      };
 
       it('should assert valid balance request correctly', async function () {
         let thrown = false;
@@ -2930,11 +3036,11 @@ describe('Asserter Tests', function () {
           server.AccountBalanceRequest(request);
         } catch (e) {
           console.error(e);
-          thrown = true; 
+          thrown = true;
         }
 
         expect(thrown).to.equal(false);
-      });   
+      });
 
       it('should throw when requesting account with invalid network', async function () {
         let thrown = false;
@@ -2948,11 +3054,11 @@ describe('Asserter Tests', function () {
           // console.error(e);
           expect(e.name).to.equal('AsserterError');
           expect(e.message).to.equal('Network {"blockchain":"Bitcoin","network":"Testnet"} is not supported');
-          thrown = true; 
+          thrown = true;
         }
 
         expect(thrown).to.equal(true);
-      });   
+      });
 
       it('should throw when passing null as a request', async function () {
         let thrown = false;
@@ -2966,11 +3072,11 @@ describe('Asserter Tests', function () {
           // console.error(e);
           expect(e.name).to.equal('AsserterError');
           expect(e.message).to.equal('AccountBalanceRequest is null');
-          thrown = true; 
+          thrown = true;
         }
 
         expect(thrown).to.equal(true);
-      });     
+      });
 
       it('should throw when passing a request without a network specifier', async function () {
         let thrown = false;
@@ -2984,7 +3090,7 @@ describe('Asserter Tests', function () {
           // console.error(e);
           expect(e.name).to.equal('AsserterError');
           expect(e.message).to.equal('NetworkIdentifier is null');
-          thrown = true; 
+          thrown = true;
         }
 
         expect(thrown).to.equal(true);
@@ -3002,7 +3108,7 @@ describe('Asserter Tests', function () {
           // console.error(e);
           expect(e.name).to.equal('AsserterError');
           expect(e.message).to.equal('Account is null');
-          thrown = true; 
+          thrown = true;
         }
 
         expect(thrown).to.equal(true);
@@ -3018,11 +3124,11 @@ describe('Asserter Tests', function () {
           server.AccountBalanceRequest(request);
         } catch (e) {
           console.error(e);
-          thrown = true; 
+          thrown = true;
         }
 
         expect(thrown).to.equal(false);
-      });     
+      });
 
       it('should throw when passing an invalid historical request', async function () {
         let thrown = false;
@@ -3036,12 +3142,12 @@ describe('Asserter Tests', function () {
         } catch (e) {
           // console.error(e);
           expect(e.name).to.equal('AsserterError');
-          expect(e.message).to.equal('Neither PartialBlockIdentifier.hash nor PartialBlockIdentifier.index is set');          
-          thrown = true; 
+          expect(e.message).to.equal('Neither PartialBlockIdentifier.hash nor PartialBlockIdentifier.index is set');
+          thrown = true;
         }
 
         expect(thrown).to.equal(true);
-      });   
+      });
 
       it('should throw when historical request is not available', async function () {
         let thrown = false;
@@ -3055,12 +3161,12 @@ describe('Asserter Tests', function () {
         } catch (e) {
           // console.error(e);
           expect(e.name).to.equal('AsserterError');
-          expect(e.message).to.equal('historical balance loopup is not supported');          
-          thrown = true; 
+          expect(e.message).to.equal('historical balance loopup is not supported');
+          thrown = true;
         }
 
         expect(thrown).to.equal(true);
-      });       
+      });
     });
 
     describe('Test BlockRequest', function () {
@@ -3073,7 +3179,7 @@ describe('Asserter Tests', function () {
           asserter.BlockRequest(request);
         } catch (e) {
           console.error(e);
-          thrown = true; 
+          thrown = true;
         }
 
         expect(thrown).to.equal(false);
@@ -3090,7 +3196,7 @@ describe('Asserter Tests', function () {
           asserter.BlockRequest(request);
         } catch (e) {
           console.error(e);
-          thrown = true; 
+          thrown = true;
         }
 
         expect(thrown).to.equal(false);
@@ -3107,7 +3213,7 @@ describe('Asserter Tests', function () {
           // console.error(e);
           expect(e.name).to.equal('AsserterError');
           expect(e.message).to.equal('Network {"blockchain":"Bitcoin","network":"Testnet"} is not supported');
-          thrown = true; 
+          thrown = true;
         }
 
         expect(thrown).to.equal(true);
@@ -3124,7 +3230,7 @@ describe('Asserter Tests', function () {
           // console.error(e);
           expect(e.name).to.equal('AsserterError');
           expect(e.message).to.equal('BlockRequest is null');
-          thrown = true; 
+          thrown = true;
         }
 
         expect(thrown).to.equal(true);
@@ -3142,11 +3248,11 @@ describe('Asserter Tests', function () {
           // console.error(e);
           expect(e.name).to.equal('AsserterError');
           expect(e.message).to.equal('NetworkIdentifier is null');
-          thrown = true; 
+          thrown = true;
         }
 
         expect(thrown).to.equal(true);
-      });      
+      });
 
       it('should throw when requesting a block without a block identifier', async function () {
         let thrown = false;
@@ -3159,11 +3265,11 @@ describe('Asserter Tests', function () {
           // console.error(e);
           expect(e.name).to.equal('AsserterError');
           expect(e.message).to.equal('PartialBlockIdentifier is null');
-          thrown = true; 
+          thrown = true;
         }
 
         expect(thrown).to.equal(true);
-      });       
+      });
 
       it('should throw when requesting an invalid partialBlockIdentifier', async function () {
         let thrown = false;
@@ -3176,11 +3282,11 @@ describe('Asserter Tests', function () {
           // console.error(e);
           expect(e.name).to.equal('AsserterError');
           expect(e.message).to.equal('Neither PartialBlockIdentifier.hash nor PartialBlockIdentifier.index is set');
-          thrown = true; 
+          thrown = true;
         }
 
         expect(thrown).to.equal(true);
-      });    
+      });
     });
 
     describe('Test BlockTransactionRequest', function () {
@@ -3197,10 +3303,10 @@ describe('Asserter Tests', function () {
           asserter.BlockTransactionRequest(request);
         } catch (e) {
           console.error(e);
-          thrown = true; 
+          thrown = true;
         }
 
-        expect(thrown).to.equal(false);        
+        expect(thrown).to.equal(false);
       });
 
       it('should throw when passing an invalid network', async function () {
@@ -3218,10 +3324,10 @@ describe('Asserter Tests', function () {
           // console.error(e);
           expect(e.name).to.equal('AsserterError');
           expect(e.message).to.equal('Network {"blockchain":"Bitcoin","network":"Testnet"} is not supported');
-          thrown = true; 
+          thrown = true;
         }
 
-        expect(thrown).to.equal(true);        
+        expect(thrown).to.equal(true);
       });
 
       it('should throw when passing null', async function () {
@@ -3235,11 +3341,11 @@ describe('Asserter Tests', function () {
           // console.error(e);
           expect(e.name).to.equal('AsserterError');
           expect(e.message).to.equal('BlockTransactionRequest is null');
-          thrown = true; 
+          thrown = true;
         }
 
-        expect(thrown).to.equal(true);        
-      });    
+        expect(thrown).to.equal(true);
+      });
 
       it('should throw when the request is missing a network', async function () {
         let thrown = false;
@@ -3256,10 +3362,10 @@ describe('Asserter Tests', function () {
           // console.error(e);
           expect(e.name).to.equal('AsserterError');
           expect(e.message).to.equal('NetworkIdentifier is null');
-          thrown = true; 
+          thrown = true;
         }
 
-        expect(thrown).to.equal(true);        
+        expect(thrown).to.equal(true);
       });
 
       it('should throw when the request is missing a block identifier', async function () {
@@ -3277,11 +3383,11 @@ describe('Asserter Tests', function () {
           // console.error(e);
           expect(e.name).to.equal('AsserterError');
           expect(e.message).to.equal('BlockIdentifier is null');
-          thrown = true; 
+          thrown = true;
         }
 
-        expect(thrown).to.equal(true);        
-      });    
+        expect(thrown).to.equal(true);
+      });
 
       it('should throw when the request\'s blockIdentifier is invalid', async function () {
         let thrown = false;
@@ -3297,11 +3403,11 @@ describe('Asserter Tests', function () {
           // console.error(e);
           expect(e.name).to.equal('AsserterError');
           expect(e.message).to.equal('BlockIdentifier.hash is missing');
-          thrown = true; 
+          thrown = true;
         }
 
-        expect(thrown).to.equal(true);        
-      });   
+        expect(thrown).to.equal(true);
+      });
     });
 
     describe('Test ConstructionMetadataRequest', function () {
@@ -3317,10 +3423,10 @@ describe('Asserter Tests', function () {
           asserter.ConstructionMetadataRequest(request);
         } catch (e) {
           console.error(e);
-          thrown = true; 
+          thrown = true;
         }
 
-        expect(thrown).to.equal(false); 
+        expect(thrown).to.equal(false);
       });
 
       it('should throw when a wrong network was specified', async function () {
@@ -3337,11 +3443,11 @@ describe('Asserter Tests', function () {
           // console.error(e);
           expect(e.name).to.equal('AsserterError');
           expect(e.message).to.equal('Network {"blockchain":"Bitcoin","network":"Testnet"} is not supported');
-          thrown = true; 
+          thrown = true;
         }
 
-        expect(thrown).to.equal(true); 
-      });  
+        expect(thrown).to.equal(true);
+      });
 
       it('should throw when the request is null', async function () {
         let thrown = false;
@@ -3354,11 +3460,11 @@ describe('Asserter Tests', function () {
           // console.error(e);
           expect(e.name).to.equal('AsserterError');
           expect(e.message).to.equal('ConstructionMetadataRequest is null');
-          thrown = true; 
+          thrown = true;
         }
 
-        expect(thrown).to.equal(true); 
-      });        
+        expect(thrown).to.equal(true);
+      });
 
       it('should throw when the request is missing a network', async function () {
         let thrown = false;
@@ -3374,11 +3480,11 @@ describe('Asserter Tests', function () {
           // console.error(e);
           expect(e.name).to.equal('AsserterError');
           expect(e.message).to.equal('NetworkIdentifier is null');
-          thrown = true; 
+          thrown = true;
         }
 
-        expect(thrown).to.equal(true); 
-      });    
+        expect(thrown).to.equal(true);
+      });
 
       it('should throw when the request is missing options', async function () {
         let thrown = false;
@@ -3394,11 +3500,11 @@ describe('Asserter Tests', function () {
           // console.error(e);
           expect(e.name).to.equal('AsserterError');
           expect(e.message).to.equal('ConstructionMetadataRequest.options is null');
-          thrown = true; 
+          thrown = true;
         }
 
-        expect(thrown).to.equal(true); 
-      });  
+        expect(thrown).to.equal(true);
+      });
     });
 
     describe('Test ConstructionSubmitRequest', function () {
@@ -3414,11 +3520,11 @@ describe('Asserter Tests', function () {
           asserter.ConstructionSubmitRequest(request);
         } catch (e) {
           console.error(e);
-          thrown = true; 
+          thrown = true;
         }
 
-        expect(thrown).to.equal(false); 
-      });  
+        expect(thrown).to.equal(false);
+      });
 
       it('should throw when the request is missing options', async function () {
         let thrown = false;
@@ -3434,11 +3540,11 @@ describe('Asserter Tests', function () {
           // console.error(e);
           expect(e.name).to.equal('AsserterError');
           expect(e.message).to.equal('Network {"blockchain":"Bitcoin","network":"Testnet"} is not supported');
-          thrown = true; 
+          thrown = true;
         }
 
-        expect(thrown).to.equal(true); 
-      });  
+        expect(thrown).to.equal(true);
+      });
 
       it('should throw the request is null', async function () {
         let thrown = false;
@@ -3451,11 +3557,11 @@ describe('Asserter Tests', function () {
           // console.error(e);
           expect(e.name).to.equal('AsserterError');
           expect(e.message).to.equal('ConstructionSubmitRequest.options is null');
-          thrown = true; 
+          thrown = true;
         }
 
-        expect(thrown).to.equal(true); 
-      });  
+        expect(thrown).to.equal(true);
+      });
 
       it('should throw when the request has no transaction', async function () {
         let thrown = false;
@@ -3469,11 +3575,11 @@ describe('Asserter Tests', function () {
           // console.error(e);
           expect(e.name).to.equal('AsserterError');
           expect(e.message).to.equal('NetworkIdentifier is null');
-          thrown = true; 
+          thrown = true;
         }
 
-        expect(thrown).to.equal(true); 
-      });  
+        expect(thrown).to.equal(true);
+      });
     });
 
     describe('Test MempoolTransactionRequest', function () {
@@ -3489,10 +3595,10 @@ describe('Asserter Tests', function () {
           asserter.MempoolTransactionRequest(request);
         } catch (e) {
           console.error(e);
-          thrown = true; 
+          thrown = true;
         }
 
-        expect(thrown).to.equal(false);         
+        expect(thrown).to.equal(false);
       });
 
       it('should throw when the specified network not supported', async function () {
@@ -3509,11 +3615,11 @@ describe('Asserter Tests', function () {
           // console.error(e);
           expect(e.name).to.equal('AsserterError');
           expect(e.message).to.equal('Network {"blockchain":"Bitcoin","network":"Testnet"} is not supported');
-          thrown = true; 
+          thrown = true;
         }
 
-        expect(thrown).to.equal(true);         
-      });  
+        expect(thrown).to.equal(true);
+      });
 
       it('should throw then the request is null', async function () {
         let thrown = false;
@@ -3526,11 +3632,11 @@ describe('Asserter Tests', function () {
           // console.error(e);
           expect(e.name).to.equal('AsserterError');
           expect(e.message).to.equal('MempoolTransactionRequest is null');
-          thrown = true; 
+          thrown = true;
         }
 
-        expect(thrown).to.equal(true);         
-      }); 
+        expect(thrown).to.equal(true);
+      });
 
       it('should throw then the request is missing a network', async function () {
         let thrown = false;
@@ -3546,11 +3652,11 @@ describe('Asserter Tests', function () {
           // console.error(e);
           expect(e.name).to.equal('AsserterError');
           expect(e.message).to.equal('NetworkIdentifier is null');
-          thrown = true; 
+          thrown = true;
         }
 
-        expect(thrown).to.equal(true);         
-      });  
+        expect(thrown).to.equal(true);
+      });
 
       it('should throw when the TransactionIdentifier is invalid', async function () {
         let thrown = false;
@@ -3566,11 +3672,26 @@ describe('Asserter Tests', function () {
           // console.error(e);
           expect(e.name).to.equal('AsserterError');
           expect(e.message).to.equal('TransactionIdentifier.hash is missing');
-          thrown = true; 
+          thrown = true;
         }
 
-        expect(thrown).to.equal(true);         
-      });    
+        expect(thrown).to.equal(true);
+      });
+
+      it('should pass validation of transaction array', async function () {
+        let thrown = false;
+
+        const validTransaction = new TransactionIdentifier('blah');
+
+        try {
+          asserter.MempoolTransactions([validTransaction]);
+        } catch (e) {
+          console.error(e);
+          thrown = true;
+        }
+
+        expect(thrown).to.equal(false);
+      });
     });
 
     describe('Test MetadataRequest', function () {
@@ -3583,10 +3704,10 @@ describe('Asserter Tests', function () {
           asserter.MetadataRequest(request);
         } catch (e) {
           // console.error(e);
-          thrown = true; 
+          thrown = true;
         }
 
-        expect(thrown).to.equal(false);   
+        expect(thrown).to.equal(false);
       });
 
       it('should throw when the request is null', async function () {
@@ -3600,11 +3721,11 @@ describe('Asserter Tests', function () {
           // console.error(e);
           expect(e.name).to.equal('AsserterError');
           expect(e.message).to.equal('MempoolTransactionRequest is null');
-          thrown = true; 
+          thrown = true;
         }
 
-        expect(thrown).to.equal(true);   
-      });      
+        expect(thrown).to.equal(true);
+      });
     });
 
     describe('Test NetworkRequest', function () {
@@ -3617,10 +3738,10 @@ describe('Asserter Tests', function () {
           asserter.NetworkRequest(request);
         } catch (e) {
           console.error(e);
-          thrown = true; 
+          thrown = true;
         }
 
-        expect(thrown).to.equal(false);   
+        expect(thrown).to.equal(false);
       });
 
       it('should throw when the request has a unsupported network identifier', async function () {
@@ -3634,11 +3755,11 @@ describe('Asserter Tests', function () {
           // console.error(e);
           expect(e.name).to.equal('AsserterError');
           expect(e.message).to.equal('Network {"blockchain":"Bitcoin","network":"Testnet"} is not supported');
-          thrown = true; 
+          thrown = true;
         }
 
-        expect(thrown).to.equal(true);   
-      });    
+        expect(thrown).to.equal(true);
+      });
 
       it('should throw when the request is null', async function () {
         let thrown = false;
@@ -3651,11 +3772,11 @@ describe('Asserter Tests', function () {
           // console.error(e);
           expect(e.name).to.equal('AsserterError');
           expect(e.message).to.equal('NetworkRequest is null');
-          thrown = true; 
+          thrown = true;
         }
 
-        expect(thrown).to.equal(true);   
-      });    
+        expect(thrown).to.equal(true);
+      });
 
       it('should throw when the request is missing a network', async function () {
         let thrown = false;
@@ -3668,14 +3789,14 @@ describe('Asserter Tests', function () {
           // console.error(e);
           expect(e.name).to.equal('AsserterError');
           expect(e.message).to.equal('NetworkIdentifier is null');
-          thrown = true; 
+          thrown = true;
         }
 
-        expect(thrown).to.equal(true);   
-      });                  
-    });  
+        expect(thrown).to.equal(true);
+      });
+    });
 
-    describe('Test ConstructionDeriveRequest', function () { 
+    describe('Test ConstructionDeriveRequest', function () {
       it('should assert a valid request properly', async function () {
         let thrown = false;
 
@@ -3692,7 +3813,7 @@ describe('Asserter Tests', function () {
         }
 
         expect(thrown).to.equal(false);
-      });  
+      });
 
       it('should throw when passing a wrong network', async function () {
         let thrown = false;
@@ -3706,10 +3827,10 @@ describe('Asserter Tests', function () {
         }  catch (e) {
           thrown = true;
           expect(e.message).to.equal('public_key cannot be null');
-        } 
+        }
 
         expect(thrown).to.equal(true);
-      });    
+      });
 
       it('should throw when passing null', async function () {
         let thrown = false;
@@ -3724,7 +3845,7 @@ describe('Asserter Tests', function () {
         }
 
         expect(thrown).to.equal(true);
-      });  
+      });
 
       it('should throw when passing no public key', async function () {
         let thrown = false;
@@ -3741,7 +3862,7 @@ describe('Asserter Tests', function () {
         }
 
         expect(thrown).to.equal(true);
-      });  
+      });
 
       it('should throw when passing an empty public key', async function () {
         let thrown = false;
@@ -3759,10 +3880,10 @@ describe('Asserter Tests', function () {
         }
 
         expect(thrown).to.equal(true);
-      });  
-    });  
+      });
+    });
 
-    describe('Test ConstructionPreprocessRequest', function () { 
+    describe('Test ConstructionPreprocessRequest', function () {
       it('should assert a valid request properly', async function () {
         let thrown = false;
 
@@ -3779,7 +3900,7 @@ describe('Asserter Tests', function () {
         }
 
         expect(thrown).to.equal(false);
-      });  
+      });
 
       it('should throw when passing a wrong network', async function () {
         let thrown = false;
@@ -3793,10 +3914,10 @@ describe('Asserter Tests', function () {
         }  catch (e) {
           thrown = true;
           expect(e.message).to.equal('Network {"blockchain":"Bitcoin","network":"Testnet"} is not supported');
-        } 
+        }
 
         expect(thrown).to.equal(true);
-      });    
+      });
 
       it('should throw when passing null', async function () {
         let thrown = false;
@@ -3811,7 +3932,7 @@ describe('Asserter Tests', function () {
         }
 
         expect(thrown).to.equal(true);
-      });  
+      });
 
       it('should throw when passing null as operations', async function () {
         let thrown = false;
@@ -3828,7 +3949,7 @@ describe('Asserter Tests', function () {
         }
 
         expect(thrown).to.equal(true);
-      });     
+      });
 
       it('should throw when passing empty operations', async function () {
         let thrown = false;
@@ -3846,7 +3967,7 @@ describe('Asserter Tests', function () {
         }
 
         expect(thrown).to.equal(true);
-      });      
+      });
 
       it('should throw when passing an unsupported operation type', async function () {
         let thrown = false;
@@ -3864,7 +3985,7 @@ describe('Asserter Tests', function () {
         }
 
         expect(thrown).to.equal(true);
-      });  
+      });
 
       it('should throw when passing invalid operations', async function () {
         let thrown = false;
@@ -3882,10 +4003,10 @@ describe('Asserter Tests', function () {
         }
 
         expect(thrown).to.equal(true);
-      });       
-    });  
+      });
+    });
 
-    describe('Test ConstructionPayloadsRequest', function () { 
+    describe('Test ConstructionPayloadsRequest', function () {
       it('should assert a valid request properly', async function () {
         let thrown = false;
 
@@ -3904,7 +4025,7 @@ describe('Asserter Tests', function () {
         }
 
         expect(thrown).to.equal(false);
-      });  
+      });
 
       it('should throw when passing a wrong network', async function () {
         let thrown = false;
@@ -3918,10 +4039,10 @@ describe('Asserter Tests', function () {
         }  catch (e) {
           thrown = true;
           expect(e.message).to.equal('Network {"blockchain":"Bitcoin","network":"Testnet"} is not supported');
-        } 
+        }
 
         expect(thrown).to.equal(true);
-      });    
+      });
 
       it('should throw when passing null', async function () {
         let thrown = false;
@@ -3936,7 +4057,7 @@ describe('Asserter Tests', function () {
         }
 
         expect(thrown).to.equal(true);
-      });  
+      });
 
       it('should throw when passing null as operations', async function () {
         let thrown = false;
@@ -3953,7 +4074,7 @@ describe('Asserter Tests', function () {
         }
 
         expect(thrown).to.equal(true);
-      });     
+      });
 
       it('should throw when passing empty operations', async function () {
         let thrown = false;
@@ -3971,7 +4092,7 @@ describe('Asserter Tests', function () {
         }
 
         expect(thrown).to.equal(true);
-      });      
+      });
 
       it('should throw when passing an unsupported operation type', async function () {
         let thrown = false;
@@ -3989,7 +4110,7 @@ describe('Asserter Tests', function () {
         }
 
         expect(thrown).to.equal(true);
-      });  
+      });
 
       it('should throw when passing invalid operations', async function () {
         let thrown = false;
@@ -4007,10 +4128,150 @@ describe('Asserter Tests', function () {
         }
 
         expect(thrown).to.equal(true);
-      });              
-    });  
+      });
 
-    describe('Test ConstructionCombineRequest', function () { 
+      it('should throw when passing invalid operation amount', async function () {
+        let thrown = false;
+
+        const invalidOpsStatusTest = [
+          Operation.constructFromObject({
+            operation_identifier: new OperationIdentifier(0),
+            type: 'PAYMENT',
+            account: validAccount,
+            amount: '!!!',
+          }),
+          Operation.constructFromObject({
+            operation_identifier: new OperationIdentifier(1),
+            related_operations: [
+              new OperationIdentifier(0),
+            ],
+            type: 'PAYMENT',
+            account: validAccount,
+            amount: '!!!',
+          }),
+        ];
+
+        const request = new ConstructionPayloadsRequest(
+          validNetworkIdentifier,
+          invalidOpsStatusTest,
+        );
+
+        try {
+          asserter.ConstructionPayloadsRequest(request);
+        } catch (e) {
+          thrown = true;
+          expect(e.message).to.equal('operation.amount is invalid in operation 0: Amount.value is not an integer: undefined');
+        }
+
+        expect(thrown).to.equal(true);
+      });
+
+      it('should throw when passing invalid operation index', async function () {
+        let thrown = false;
+
+        const invalidOperationIdentifier = new OperationIdentifier('!!!')
+
+        try {
+          asserter.OperationIdentifier(invalidOperationIdentifier, null);
+        } catch (e) {
+          thrown = true;
+          expect(e.message).to.equal('OperationIdentifier: index must be a number');
+        }
+
+        expect(thrown).to.equal(true);
+      });
+
+      it('should throw when passing invalid operation status', async function () {
+        let thrown = false;
+
+        try {
+          asserter.OperationStatus(null);
+        } catch (e) {
+          thrown = true;
+          expect(e.message).to.equal('Asserter not initialized');
+        }
+
+        expect(thrown).to.equal(true);
+      });
+
+      it('should throw when passing invalid operation status type', async function () {
+        let thrown = false;
+
+        try {
+          asserter.OperationStatus(123);
+        } catch (e) {
+          thrown = true;
+          expect(e.message).to.equal('OperationStatus.status must be a string');
+        }
+
+        expect(thrown).to.equal(true);
+      });
+
+      it('should throw when passing invalid operation status empty', async function () {
+        let thrown = false;
+
+        try {
+          asserter.OperationStatus('');
+        } catch (e) {
+          thrown = true;
+          expect(e.message).to.equal('OperationStatus.status is empty');
+        }
+
+        expect(thrown).to.equal(true);
+      });
+
+      it('should throw when passing invalid operation type', async function () {
+        let thrown = false;
+
+        try {
+          asserter.OperationType(123);
+        } catch (e) {
+          thrown = true;
+          expect(e.message).to.equal('OperationStatus.type must be a string');
+        }
+
+        expect(thrown).to.equal(true);
+      });
+
+      it('should pass when passing block identifier hash', async function () {
+        let thrown = false;
+
+        try {
+          asserter.PartialBlockIdentifier({ hash: 'hash 1' });
+        } catch (e) {
+          thrown = true;
+        }
+
+        expect(thrown).to.equal(false);
+      });
+
+      it('should pass when passing block identifier index', async function () {
+        let thrown = false;
+
+        try {
+          asserter.PartialBlockIdentifier({ index: 1 });
+        } catch (e) {
+          thrown = true;
+        }
+
+        expect(thrown).to.equal(false);
+      });
+
+      it('should throw when passing null transaction', async function () {
+        let thrown = false;
+
+        try {
+          asserter.Transaction(null);
+        } catch (e) {
+          thrown = true;
+          expect(e.message).to.equal('Transaction is null');
+        }
+
+        expect(thrown).to.equal(true);
+      });
+    });
+
+    describe('Test ConstructionCombineRequest', function () {
       it('should assert a valid request properly', async function () {
         let thrown = false;
 
@@ -4030,7 +4291,7 @@ describe('Asserter Tests', function () {
         }
 
         expect(thrown).to.equal(false);
-      });  
+      });
 
       it('should throw when passing a wrong network', async function () {
         let thrown = false;
@@ -4044,10 +4305,10 @@ describe('Asserter Tests', function () {
         }  catch (e) {
           thrown = true;
           expect(e.message).to.equal('Network {"blockchain":"Bitcoin","network":"Testnet"} is not supported');
-        } 
+        }
 
         expect(thrown).to.equal(true);
-      });    
+      });
 
       it('should throw when passing null', async function () {
         let thrown = false;
@@ -4062,7 +4323,7 @@ describe('Asserter Tests', function () {
         }
 
         expect(thrown).to.equal(true);
-      });  
+      });
 
       it('should throw when passing an unsigned transaction', async function () {
         let thrown = false;
@@ -4081,7 +4342,7 @@ describe('Asserter Tests', function () {
         }
 
         expect(thrown).to.equal(true);
-      });     
+      });
 
       it('should throw when passing null as signature', async function () {
         let thrown = false;
@@ -4099,7 +4360,7 @@ describe('Asserter Tests', function () {
         }
 
         expect(thrown).to.equal(true);
-      });      
+      });
 
       it('should throw when passing empty signatures', async function () {
         let thrown = false;
@@ -4118,7 +4379,7 @@ describe('Asserter Tests', function () {
         }
 
         expect(thrown).to.equal(true);
-      });  
+      });
 
       it('should throw when passing mismatched signature type', async function () {
         let thrown = false;
@@ -4137,7 +4398,7 @@ describe('Asserter Tests', function () {
         }
 
         expect(thrown).to.equal(true);
-      });   
+      });
 
       it('should throw when passing an empty signature', async function () {
         let thrown = false;
@@ -4156,7 +4417,95 @@ describe('Asserter Tests', function () {
         }
 
         expect(thrown).to.equal(true);
-      });     
+      });
+
+      it('should throw when passing invalid signature type', async function () {
+        let thrown = false;
+
+        const request = new ConstructionCombineRequest(
+          validNetworkIdentifier,
+          'blah',
+          invalidSignatureType,
+        );
+
+        try {
+          asserter.ConstructionCombineRequest(request);
+        } catch (e) {
+          thrown = true;
+          expect(e.message).to.equal('signature 0 has invalid signature type: "abcd" is not a supported SignatureType');
+        }
+
+        expect(thrown).to.equal(true);
+      });
+
+      it('should throw when passing invalid public key', async function () {
+        let thrown = false;
+
+        const request = new ConstructionCombineRequest(
+          validNetworkIdentifier,
+          'blah',
+          invalidSignaturePublicKey,
+        );
+
+        try {
+          asserter.ConstructionCombineRequest(request);
+        } catch (e) {
+          thrown = true;
+          expect(e.message).to.equal('signature 0 has invalid public key: public key curve type is not supported: "abcd" is not a supported CurveType');
+        }
+
+        expect(thrown).to.equal(true);
+      });
+
+      it('should throw when passing invalid hexadecimal string of public key', async function () {
+        let thrown = false;
+
+        const request = new ConstructionCombineRequest(
+          validNetworkIdentifier,
+          'blah',
+          invalidSignaturePublicKeyHex,
+        );
+
+        try {
+          asserter.ConstructionCombineRequest(request);
+        } catch (e) {
+          thrown = true;
+          expect(e.message).to.equal('signature 0 has invalid public key: hex_bytes must be a valid hexadecimal string');
+        }
+
+        expect(thrown).to.equal(true);
+      });
+
+      it('should throw when passing invalid hexadecimal string of signature', async function () {
+        let thrown = false;
+
+        const invalidSignatureHex = [
+          {
+            signing_payload: SigningPayload.constructFromObject({
+              address: validAccount.address,
+              hex_bytes: '1234abcd',
+            }),
+            public_key: validPublicKey,
+            signature_type: new SignatureType().ed25519,
+            hex_bytes: '!!!!',
+          },
+        ];
+
+        const request = new ConstructionCombineRequest(
+          validNetworkIdentifier,
+          'blah',
+          invalidSignatureHex,
+        );
+
+        try {
+          asserter.ConstructionCombineRequest(request);
+        } catch (e) {
+          thrown = true;
+          expect(e.message).to.equal('hex_bytes must be a valid hexadecimal string');
+        }
+
+        expect(thrown).to.equal(true);
+      });
 
       it('should throw when passing a matched', async function () {
         let thrown = false;
@@ -4174,10 +4523,10 @@ describe('Asserter Tests', function () {
         }
 
         expect(thrown).to.equal(false);
-      });                     
-    });  
+      });
+    });
 
-    describe('Test ConstructionHashRequest', function () { 
+    describe('Test ConstructionHashRequest', function () {
       it('should properly assert a valid request', async function () {
         let thrown = false;
 
@@ -4193,7 +4542,7 @@ describe('Asserter Tests', function () {
         }
 
         expect(thrown).to.equal(false);
-      });   
+      });
 
       it('should throw when passing an invalid network', async function () {
         let thrown = false;
@@ -4210,7 +4559,7 @@ describe('Asserter Tests', function () {
         }
 
         expect(thrown).to.equal(true);
-      });   
+      });
 
       it('should properly assert a valid request', async function () {
         let thrown = false;
@@ -4227,7 +4576,7 @@ describe('Asserter Tests', function () {
         }
 
         expect(thrown).to.equal(false);
-      });   
+      });
 
       it('should throw when passing null', async function () {
         let thrown = false;
@@ -4242,7 +4591,7 @@ describe('Asserter Tests', function () {
         }
 
         expect(thrown).to.equal(true);
-      });  
+      });
 
       it('should throw when passing an empty signed transaction', async function () {
         let thrown = false;
@@ -4259,10 +4608,10 @@ describe('Asserter Tests', function () {
         }
 
         expect(thrown).to.equal(true);
-      });   
-    });  
+      });
+    });
 
-    describe('Test ConstructionParseRequest', function () { 
+    describe('Test ConstructionParseRequest', function () {
       it('should properly assert a valid request', async function () {
         let thrown = false;
 
@@ -4275,12 +4624,12 @@ describe('Asserter Tests', function () {
         try {
           asserter.ConstructionParseRequest(request);
         } catch (e) {
-          console.log(e)
+          console.log(e);
           thrown = true;
         }
 
         expect(thrown).to.equal(false);
-      });   
+      });
 
       it('should throw when passing an invalid network', async function () {
         let thrown = false;
@@ -4298,7 +4647,7 @@ describe('Asserter Tests', function () {
         }
 
         expect(thrown).to.equal(true);
-      });   
+      });
 
       it('should throw when passing null', async function () {
         let thrown = false;
@@ -4313,7 +4662,7 @@ describe('Asserter Tests', function () {
         }
 
         expect(thrown).to.equal(true);
-      });   
+      });
 
       it('should throw when passing an empty signed transaction', async function () {
         let thrown = false;
@@ -4331,8 +4680,8 @@ describe('Asserter Tests', function () {
         }
 
         expect(thrown).to.equal(true);
-      });     
-    });   
+      });
+    });
   });
 
   describe('Contains Currency', function () {
@@ -4358,7 +4707,7 @@ describe('Asserter Tests', function () {
           'blah': 'hello',
         },
       });
-      
+
       const currencies = [
         T.Currency.constructFromObject({
           symbol: 'BTC',
@@ -4372,7 +4721,7 @@ describe('Asserter Tests', function () {
       const result = asserter.containsCurrency(currencies, toFind);
 
       expect(result).to.equal(true);
-    });    
+    });
 
     it('should handle more complex contains', async function () {
       const toFind = T.Currency.constructFromObject({
@@ -4383,7 +4732,7 @@ describe('Asserter Tests', function () {
           'blah2': 'bye',
         },
       });
-      
+
       const currencies = [
         T.Currency.constructFromObject({
           symbol: 'BTC',
@@ -4398,27 +4747,27 @@ describe('Asserter Tests', function () {
       const result = asserter.containsCurrency(currencies, toFind);
 
       expect(result).to.equal(true);
-    });     
+    });
 
     it('should not find a currency in an empty currency array', async function () {
       const toFind = T.Currency.constructFromObject({
         symbol: 'BTC',
         decimals: 8,
       });
-      
+
       const currencies = [];
 
       const result = asserter.containsCurrency(currencies, toFind);
 
       expect(result).to.equal(false);
-    });     
+    });
 
     it('should not find a currency with a different symbol', async function () {
       const toFind = T.Currency.constructFromObject({
         symbol: 'BTC',
         decimals: 8,
       });
-      
+
       const currencies = [
         T.Currency.constructFromObject({
           symbol: 'ERX',
@@ -4429,14 +4778,14 @@ describe('Asserter Tests', function () {
       const result = asserter.containsCurrency(currencies, toFind);
 
       expect(result).to.equal(false);
-    });    
+    });
 
     it('should not find a currency with different decimals', async function () {
       const toFind = T.Currency.constructFromObject({
         symbol: 'BTC',
         decimals: 8,
       });
-      
+
       const currencies = [
         T.Currency.constructFromObject({
           symbol: 'BTC',
@@ -4447,7 +4796,7 @@ describe('Asserter Tests', function () {
       const result = asserter.containsCurrency(currencies, toFind);
 
       expect(result).to.equal(false);
-    });     
+    });
 
     it('should not find a currency with different metadata', async function () {
       const toFind = T.Currency.constructFromObject({
@@ -4457,7 +4806,7 @@ describe('Asserter Tests', function () {
           'blah': 'hello',
         },
       });
-      
+
       const currencies = [
         T.Currency.constructFromObject({
           symbol: 'BTC',
@@ -4471,7 +4820,7 @@ describe('Asserter Tests', function () {
       const result = asserter.containsCurrency(currencies, toFind);
 
       expect(result).to.equal(false);
-    });         
+    });
   });
 
   describe('Account Balance', function () {
@@ -4537,7 +4886,7 @@ describe('Asserter Tests', function () {
 
       expect(thrown).to.equal(true);
     });
-    
+
     it('should assert history request index as valid', () => {
       let thrown = false;
       try {
@@ -4583,7 +4932,7 @@ describe('Asserter Tests', function () {
       }
 
       expect(thrown).to.equal(false);
-    });    
+    });
 
     it('should assert valid history request index as invalid', () => {
       let thrown = false;
@@ -4601,7 +4950,7 @@ describe('Asserter Tests', function () {
       }
 
       expect(thrown).to.equal(true);
-    });    
+    });
 
     it('should assert invalid historical request hash as invalid', () => {
       let thrown = false;
@@ -4619,7 +4968,7 @@ describe('Asserter Tests', function () {
       }
 
       expect(thrown).to.equal(true);
-    });     
+    });
   });
 
   describe('Coin Tests', function () {
@@ -4642,9 +4991,9 @@ describe('Asserter Tests', function () {
         );
 
         try {
-          asserter.Coin(coin)
+          asserter.Coin(coin);
         } catch (e) {
-          console.error(e)
+          console.error(e);
           thrown = true;
         }
 
@@ -4655,14 +5004,14 @@ describe('Asserter Tests', function () {
         let thrown = false;
 
         try {
-          asserter.Coin(null)
+          asserter.Coin(null);
         } catch (e) {
           thrown = true;
           expect(e.message).to.equal('Coin cannot be null');
         }
 
         expect(thrown).to.equal(true);
-      });    
+      });
 
       it('should throw when coin has an invalid identifier', async () => {
         let thrown = false;
@@ -4672,14 +5021,14 @@ describe('Asserter Tests', function () {
         );
 
         try {
-          asserter.Coin(coin)
+          asserter.Coin(coin);
         } catch (e) {
           thrown = true;
           expect(e.message).to.equal('coin identifier is invalid: coin_identifier cannot be empty');
         }
 
         expect(thrown).to.equal(true);
-      });   
+      });
 
       it('should throw when a coin has an invalid amount', async () => {
         let thrown = false;
@@ -4689,14 +5038,14 @@ describe('Asserter Tests', function () {
         );
 
         try {
-          asserter.Coin(coin)
+          asserter.Coin(coin);
         } catch (e) {
           thrown = true;
           expect(e.message).to.equal('coin amount is invalid: Amount.currency is null');
         }
 
         expect(thrown).to.equal(true);
-      });   
+      });
 
       it('should throw when no amount was specified', async () => {
         let thrown = false;
@@ -4706,14 +5055,14 @@ describe('Asserter Tests', function () {
         );
 
         try {
-          asserter.Coin(coin)
+          asserter.Coin(coin);
         } catch (e) {
           thrown = true;
           expect(e.message).to.equal('coin amount is invalid: Amount.value is missing');
         }
 
         expect(thrown).to.equal(true);
-      }); 
+      });
     });
 
     describe('Test Coins', function () {
@@ -4729,11 +5078,11 @@ describe('Asserter Tests', function () {
           new T.Coin(
             new T.CoinIdentifier('coin2'),
             validAmount,
-          ),       
+          ),
         ];
 
         try {
-          asserter.Coins(coins)
+          asserter.Coins(coins);
         } catch (e) {
           thrown = true;
           expect(e.message).to.equal('coin amount is invalid: Amount.value is missing');
@@ -4748,7 +5097,7 @@ describe('Asserter Tests', function () {
         const coins = null;
 
         try {
-          asserter.Coins(coins)
+          asserter.Coins(coins);
         } catch (e) {
           thrown = true;
           expect(e.message).to.equal('coin amount is invalid: Amount.value is missing');
@@ -4769,7 +5118,7 @@ describe('Asserter Tests', function () {
           new T.Coin(
             new T.CoinIdentifier('coin1'),
             validAmount,
-          ),       
+          ),
         ];
 
         try {
@@ -4798,7 +5147,7 @@ describe('Asserter Tests', function () {
           thrown = true;
         }
 
-        expect(thrown).to.equal(false);        
+        expect(thrown).to.equal(false);
       });
 
       it('should throw when passing null', async () => {
@@ -4811,7 +5160,7 @@ describe('Asserter Tests', function () {
           expect(e.message).to.equal('coin change cannot be null');
         }
 
-        expect(thrown).to.equal(true);        
+        expect(thrown).to.equal(true);
       });
 
       it('should throw when passing an invalid identifier', async () => {
@@ -4829,7 +5178,7 @@ describe('Asserter Tests', function () {
           expect(e.message).to.equal('coin identifier is invalid: coin_identifier cannot be empty');
         }
 
-        expect(thrown).to.equal(true);        
+        expect(thrown).to.equal(true);
       });
 
       it('should throw when passing an coin action', async () => {
@@ -4847,7 +5196,7 @@ describe('Asserter Tests', function () {
           expect(e.message).to.equal('coin action is invalid: "hello" is not a valid coin action');
         }
 
-        expect(thrown).to.equal(true);        
+        expect(thrown).to.equal(true);
       });
     });
   });

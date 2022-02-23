@@ -22,10 +22,12 @@
 // syncer.test.js
 const { expect, should } = require('chai');
 const RosettaSDK = require('..');
+const { launchServer, getPort } = require('./fetcher.test');
+const Rosetta = require('../index');
 
 const networkIdentifier = {
-  blockchain: "blah",
-  network:    "testnet",
+  blockchain: "blockchain",
+  network:    "network",
 };
 
 const currency = {
@@ -181,13 +183,26 @@ const blockSequence = [
   },
 ];
 
-describe('Syncer', function () {
+describe('Syncer',  function () {
   should();
+  const port = getPort();
+  launchServer({
+    errorsBeforeSuccess: 0,
+    port,
+  });
+  const fetcher = new Rosetta.Fetcher({
+    retryOptions: {
+      numOfAttempts: 5,
+    },
+    server: {
+      port,
+    },
+  });
 
   const syncer = new RosettaSDK.Syncer({
     networkIdentifier: networkIdentifier,
     genesisBlock: blockSequence[0].block_identifier,
-    // fetcher
+    fetcher
   });
 
   let lastEvent = null;
@@ -251,7 +266,7 @@ describe('Syncer', function () {
     expect(syncer.pastBlocks).to.deep.equal([
       blockSequence[0].block_identifier,
       blockSequence[3].block_identifier,
-    ]);    
+    ]);
 
     await syncer.processBlock(blockSequence[2]);
     expect(lastEvent).to.equal('BLOCK_ADDED');
@@ -261,7 +276,7 @@ describe('Syncer', function () {
       blockSequence[0].block_identifier,
       blockSequence[3].block_identifier,
       blockSequence[2].block_identifier,
-    ]);       
+    ]);
   });
 
   it('should handle out of order blocks', async function () {
@@ -276,6 +291,18 @@ describe('Syncer', function () {
       blockSequence[0].block_identifier,
       blockSequence[3].block_identifier,
       blockSequence[2].block_identifier,
-    ]);    
+    ]);
+  });
+
+  it('should handle sync', async function () {
+    let thrown = false;
+
+    try {
+      await syncer.sync(blockSequence[1].block_identifier.index, blockSequence[3].block_identifier.index);
+    } catch (e) {
+      thrown = true;
+    }
+
+    expect(thrown).to.equal(false);
   });
 });

@@ -206,8 +206,8 @@ describe('Parser', function () {
 
       const parser = new RosettaSDK.Parser({
         asserter,
-        exemptFunc: (op) => 
-          Hash(op.account) == Hash(recipientOperation.account),      
+        exemptFunc: (op) =>
+          Hash(op.account) == Hash(recipientOperation.account),
       });
 
       const block = {
@@ -232,7 +232,7 @@ describe('Parser', function () {
       const isOrphan = false;
 
       const changes = parser.balanceChanges(block, isOrphan);
-      expect(changes).to.deep.equal(expectedChanges);    
+      expect(changes).to.deep.equal(expectedChanges);
     });
 
     it('should group balanceChanges if an address receives multiple utxos', async function () {
@@ -373,7 +373,7 @@ describe('Parser', function () {
           operations: [
             { operation_identifier: { index: 5 } },
           ],
-        },      
+        },
       };
 
       const parser = new RosettaSDK.Parser();
@@ -403,7 +403,7 @@ describe('Parser', function () {
           operations: [
             { operation_identifier: { index: 5 } },
           ],
-        },        
+        },
       ];
 
       const result = parser.sortOperationsGroup(6, operationsMap);
@@ -441,7 +441,7 @@ describe('Parser', function () {
           {
             operation_identifier: { index: 2 },
             type: 'op 2',
-          },          
+          },
         ],
       };
 
@@ -488,12 +488,12 @@ describe('Parser', function () {
 
           nil_amount_present: true,
           currencies: [],
-        },        
-      ];      
+        },
+      ];
 
       const result = parser.groupOperations(transaction);
 
-      expect(c(result)).to.deep.equal(expectedResult);      
+      expect(c(result)).to.deep.equal(expectedResult);
     });
 
     it('should group related operations', async function () {
@@ -571,7 +571,7 @@ describe('Parser', function () {
               amount: {
                 currency: { symbol: 'BTC' },
               }
-            },       
+            },
           ],
 
           currencies: [
@@ -586,11 +586,11 @@ describe('Parser', function () {
             {
               operation_identifier: { index: 1 },
               type: 'type 1',
-            },   
+            },
           ],
 
           currencies: [],
-        },   
+        },
 
         {
           type: '',
@@ -625,9 +625,9 @@ describe('Parser', function () {
                 { index: 2 },
               ],
               type: 'type 4',
-            },        
+            },
           ],
-        },     
+        },
       ];
 
       const result = parser.groupOperations(transaction);
@@ -650,13 +650,13 @@ describe('Parser', function () {
             }),
           }),
 
-          new OperationDescription({ 
+          new OperationDescription({
             account: new AccountDescription({ exists: true }),
             amount: new AmountDescription({
               exists: true,
               sign: Sign.Positive
             }),
-          }),            
+          }),
         ],
       });
 
@@ -691,7 +691,7 @@ describe('Parser', function () {
           }],
 
           amounts: [100],
-        }        
+        }
       ];
 
       let matches;
@@ -720,13 +720,13 @@ describe('Parser', function () {
             }),
           }),
 
-          new OperationDescription({ 
+          new OperationDescription({
             account: new AccountDescription({ exists: true }),
             amount: new AmountDescription({
               exists: true,
               sign: Sign.Positive
             }),
-          }),            
+          }),
         ],
       });
 
@@ -754,7 +754,7 @@ describe('Parser', function () {
       }
 
       expect(matches).to.deep.equal(expectedMatches);
-    });    
+    });
 
     it('should match a simple transfer specifiying a type', async function () {
       const parser = new RosettaSDK.Parser();
@@ -767,10 +767,10 @@ describe('Parser', function () {
             type: 'input',
           }),
 
-          new OperationDescription({ 
+          new OperationDescription({
             account: new AccountDescription({ exists: true }),
             type: 'output',
-          }),            
+          }),
         ],
       });
 
@@ -809,7 +809,7 @@ describe('Parser', function () {
           }],
 
           amounts: [100],
-        }        
+        }
       ];
 
       let matches;
@@ -821,7 +821,7 @@ describe('Parser', function () {
       }
 
       expect(c(matches)).to.deep.equal(expectedMatches);
-    });    
+    });
 
     it('should reject a simple transfer that has an unmatched description', async function () {
       const parser = new RosettaSDK.Parser();
@@ -838,13 +838,13 @@ describe('Parser', function () {
             }),
           }),
 
-          new OperationDescription({ 
+          new OperationDescription({
             account: new AccountDescription({ exists: true }),
             amount: new AmountDescription({
               exists: true,
               sign: Sign.Positive,
-            }),            
-          }),            
+            }),
+          }),
         ],
       });
 
@@ -875,7 +875,7 @@ describe('Parser', function () {
       }
 
       expect(matches).to.deep.equal(expectedMatches);
-    });    
+    });
 
     it('should reject a simple transfer with unequal amounts', async function () {
       const parser = new RosettaSDK.Parser();
@@ -891,20 +891,20 @@ describe('Parser', function () {
             }),
           }),
 
-          new OperationDescription({ 
+          new OperationDescription({
             account: new AccountDescription({ exists: true }),
             amount: new AmountDescription({
               exists: true,
               sign: Sign.Positive,
-            }),            
-          }),            
+            }),
+          }),
         ],
       });
 
       const operations = [
         {
           account: { address: 'addr2' },
-          amount: { value: '100' }, // Yoshi: unequal? 
+          amount: { value: '100' }, // Yoshi: unequal?
         },
 
         {}, // should be ignored
@@ -931,7 +931,7 @@ describe('Parser', function () {
 
       expect(thrown).to.equal(true);
       expect(matches).to.deep.equal(expectedMatches);
-    });    
+    });
 
     it('should reject a simple transfer with invalid opposite amounts', async function () {
       const parser = new RosettaSDK.Parser();
@@ -944,10 +944,10 @@ describe('Parser', function () {
             amount: new AmountDescription({ exists: true }),
           }),
 
-          new OperationDescription({ 
+          new OperationDescription({
             account: new AccountDescription({ exists: true }),
-            amount: new AmountDescription({ exists: true }),            
-          }),            
+            amount: new AmountDescription({ exists: true }),
+          }),
         ],
       });
 
@@ -978,7 +978,7 @@ describe('Parser', function () {
       }
 
       expect(matches).to.deep.equal(expectedMatches);
-    });    
+    });
 
     it('should match a simple transfer using currency', async function () {
       const parser = new RosettaSDK.Parser();
@@ -998,7 +998,7 @@ describe('Parser', function () {
             }),
           }),
 
-          new OperationDescription({ 
+          new OperationDescription({
             account: new AccountDescription({ exists: true }),
             amount: new AmountDescription({
               exists: true,
@@ -1007,8 +1007,8 @@ describe('Parser', function () {
                 symbol: 'BTC',
                 decimals: 8,
               },
-            }),            
-          }),            
+            }),
+          }),
         ],
       });
 
@@ -1079,7 +1079,7 @@ describe('Parser', function () {
       }
 
       expect(c(matches)).to.deep.equal(expectedMatches);
-    });    
+    });
 
     it('should reject to match a simple transfer if it can\'t match the currency', async function () {
       const parser = new RosettaSDK.Parser();
@@ -1099,7 +1099,7 @@ describe('Parser', function () {
             }),
           }),
 
-          new OperationDescription({ 
+          new OperationDescription({
             account: new AccountDescription({ exists: true }),
             amount: new AmountDescription({
               exists: true,
@@ -1108,8 +1108,8 @@ describe('Parser', function () {
                 symbol: 'BTC',
                 decimals: 8,
               },
-            }),            
-          }),            
+            }),
+          }),
         ],
       });
 
@@ -1154,7 +1154,7 @@ describe('Parser', function () {
 
       expect(thrown).to.equal(true);
       expect(c(matches)).to.deep.equal(expectedMatches);
-    });   
+    });
 
     it('should reject a simple transfer (with sender metadata) and non-equal addresses', async function () {
       const parser = new RosettaSDK.Parser();
@@ -1178,13 +1178,13 @@ describe('Parser', function () {
             }),
           }),
 
-          new OperationDescription({ 
+          new OperationDescription({
             account: new AccountDescription({ exists: true }),
             amount: new AmountDescription({
               exists: true,
               sign: Sign.Positive,
-            }),            
-          }),            
+            }),
+          }),
         ],
       });
 
@@ -1229,7 +1229,7 @@ describe('Parser', function () {
 
       expect(thrown).to.equal(true);
       expect(c(matches)).to.deep.equal(expectedMatches);
-    }); 
+    });
 
     it('should match a simple transfer (using sender metadata)', async function () {
       const parser = new RosettaSDK.Parser();
@@ -1254,7 +1254,7 @@ describe('Parser', function () {
             }),
           }),
 
-          new OperationDescription({ 
+          new OperationDescription({
             account: new AccountDescription({
               exists: true,
             }),
@@ -1262,8 +1262,8 @@ describe('Parser', function () {
             amount: new AmountDescription({
               exists: true,
               sign: Sign.Positive,
-            }),            
-          }),            
+            }),
+          }),
         ],
       });
 
@@ -1304,7 +1304,7 @@ describe('Parser', function () {
 
             amount: {
               value: '-100',
-            },            
+            },
           }],
 
           amounts: [-100],
@@ -1331,7 +1331,7 @@ describe('Parser', function () {
       }
 
       expect(c(matches)).to.deep.equal(expectedMatches);
-    });  
+    });
 
     it('should reject to match a simple transfer with missing sender address metadata', async function () {
       const parser = new RosettaSDK.Parser();
@@ -1355,7 +1355,7 @@ describe('Parser', function () {
             }),
           }),
 
-          new OperationDescription({ 
+          new OperationDescription({
             account: new AccountDescription({
               exists: true,
             }),
@@ -1363,8 +1363,8 @@ describe('Parser', function () {
             amount: new AmountDescription({
               exists: true,
               sign: Sign.Positive,
-            }),            
-          }),            
+            }),
+          }),
         ],
       });
 
@@ -1398,7 +1398,7 @@ describe('Parser', function () {
 
       expect(thrown).to.equal(true);
       expect(c(matches)).to.deep.equal(expectedMatches);
-    });  
+    });
 
     it('should match nil amount ops', async function () {
       const parser = new RosettaSDK.Parser();
@@ -1413,13 +1413,13 @@ describe('Parser', function () {
             }),
           }),
 
-          new OperationDescription({ 
+          new OperationDescription({
             account: new AccountDescription({
               exists: true,
               sub_account_exists: true,
               sub_account_address: 'sub 1',
             }),
-          }),            
+          }),
         ],
       });
 
@@ -1457,7 +1457,7 @@ describe('Parser', function () {
 
             amount: {
               value: '100',
-            },            
+            },
           }],
 
           amounts: [100],
@@ -1486,7 +1486,7 @@ describe('Parser', function () {
       }
 
       expect(c(matches)).to.deep.equal(expectedMatches);
-    });   
+    });
 
     it('should reject to match nil amount ops (force false amount)', async function () {
       const parser = new RosettaSDK.Parser();
@@ -1505,13 +1505,13 @@ describe('Parser', function () {
             }),
           }),
 
-          new OperationDescription({ 
+          new OperationDescription({
             account: new AccountDescription({
               exists: true,
               sub_account_exists: true,
               sub_account_address: 'sub 1',
             }),
-          }),            
+          }),
         ],
       });
 
@@ -1553,7 +1553,7 @@ describe('Parser', function () {
 
       expect(thrown).to.equal(true);
       expect(c(matches)).to.deep.equal(expectedMatches);
-    }); 
+    });
 
     it('should match nil amount ops (only requiring metadata keys)', async function () {
       const parser = new RosettaSDK.Parser();
@@ -1568,7 +1568,7 @@ describe('Parser', function () {
             }),
           }),
 
-          new OperationDescription({ 
+          new OperationDescription({
             account: new AccountDescription({
               exists: true,
               sub_account_exists: true,
@@ -1577,7 +1577,7 @@ describe('Parser', function () {
                 value_kind: 'number',
               }],
             }),
-          }),            
+          }),
         ],
       });
 
@@ -1612,7 +1612,7 @@ describe('Parser', function () {
               sub_account: {
                 address: 'sub 2',
               },
-            },       
+            },
           }],
 
           amounts: [null],
@@ -1644,8 +1644,8 @@ describe('Parser', function () {
       }
 
       expect(c(matches)).to.deep.equal(expectedMatches);
-    });       
-  
+    });
+
     it('should reject to match nil amount ops when sub account addresses mismatch', async function () {
       const parser = new RosettaSDK.Parser();
 
@@ -1659,13 +1659,13 @@ describe('Parser', function () {
             }),
           }),
 
-          new OperationDescription({ 
+          new OperationDescription({
             account: new AccountDescription({
               exists: true,
               sub_account_exists: true,
               sub_account_address: 'sub 1',
             }),
-          }),            
+          }),
         ],
       });
 
@@ -1705,7 +1705,7 @@ describe('Parser', function () {
 
       expect(thrown).to.equal(true);
       expect(c(matches)).to.deep.equal(expectedMatches);
-    }); 
+    });
 
     it('should reject to match nil descriptions', async function () {
       const parser = new RosettaSDK.Parser();
@@ -1749,7 +1749,7 @@ describe('Parser', function () {
 
       expect(thrown).to.equal(true);
       expect(c(matches)).to.deep.equal(expectedMatches);
-    });   
+    });
 
     it('should match two empty descriptions', async function () {
       const parser = new RosettaSDK.Parser();
@@ -1757,7 +1757,7 @@ describe('Parser', function () {
       const descriptions = new Descriptions({
         operation_descriptions: [
           new OperationDescription({}),
-          new OperationDescription({}),            
+          new OperationDescription({}),
         ],
       });
 
@@ -1791,7 +1791,7 @@ describe('Parser', function () {
               },
             },
           }],
-          amounts: [null],  
+          amounts: [null],
         },
 
         {
@@ -1803,7 +1803,7 @@ describe('Parser', function () {
               },
             }
           }],
-          amounts: [null],  
+          amounts: [null],
         },
       ];;
 
@@ -1816,7 +1816,7 @@ describe('Parser', function () {
       }
 
       expect(c(matches)).to.deep.equal(expectedMatches);
-    }); 
+    });
 
     it('should reject to match empty operations', async function () {
       const parser = new RosettaSDK.Parser();
@@ -1824,7 +1824,7 @@ describe('Parser', function () {
       const descriptions = new Descriptions({
         operation_descriptions: [
           new OperationDescription({}),
-          new OperationDescription({}),            
+          new OperationDescription({}),
         ],
       });
 
@@ -1846,7 +1846,7 @@ describe('Parser', function () {
 
       expect(thrown).to.equal(true);
       expect(c(matches)).to.deep.equal(expectedMatches);
-    });     
+    });
 
     it('should match simple repeated op', async function () {
       const parser = new RosettaSDK.Parser();
@@ -1885,7 +1885,7 @@ describe('Parser', function () {
           },
           amount: {
             value: '100',
-          },          
+          },
         },
       ];
 
@@ -1911,7 +1911,7 @@ describe('Parser', function () {
             },
           }],
 
-          amounts: [200, 100],  
+          amounts: [200, 100],
         },
       ];
 
@@ -1924,7 +1924,7 @@ describe('Parser', function () {
       }
 
       expect(c(matches)).to.deep.equal(expectedMatches);
-    }); 
+    });
 
     it('should reject to match simple repeated op, when unmatched are not allowed', async function () {
       const parser = new RosettaSDK.Parser();
@@ -1965,7 +1965,7 @@ describe('Parser', function () {
           },
           amount: {
             value: '100',
-          },          
+          },
         },
       ];
 
@@ -1976,7 +1976,7 @@ describe('Parser', function () {
 
       try {
         matches = parser.MatchOperations(descriptions, operations);
-        
+
       } catch (e) {
         // console.error(e);
         expect(e.name).to.equal('ParserError');
@@ -2026,7 +2026,7 @@ describe('Parser', function () {
           },
           amount: {
             value: '100',
-          },          
+          },
         },
       ];
 
@@ -2037,7 +2037,7 @@ describe('Parser', function () {
 
       try {
         matches = parser.MatchOperations(descriptions, operations);
-        
+
       } catch (e) {
         expect(e.name).to.equal('ParserError');
         expect(e.message).to.equal('Match index 1 out of range: opposite amounts comparison error: group descriptions not met');
@@ -2077,7 +2077,7 @@ describe('Parser', function () {
             }),
 
             allow_repeats: true,
-          }),          
+          }),
         ],
       });
 
@@ -2098,7 +2098,7 @@ describe('Parser', function () {
           },
           amount: {
             value: '100',
-          },          
+          },
         },
       ];
 
@@ -2109,7 +2109,7 @@ describe('Parser', function () {
 
       try {
         matches = parser.MatchOperations(descriptions, operations);
-        
+
       } catch (e) {
         // console.error(e);
         expect(e.name).to.equal('ParserError');
@@ -2152,7 +2152,7 @@ describe('Parser', function () {
 
             allow_repeats: true,
             type: 'input',
-          }),    
+          }),
 
           new OperationDescription({ // this description should never be matched.
             account: new AccountDescription({
@@ -2165,7 +2165,7 @@ describe('Parser', function () {
             }),
 
             allow_repeats: true,
-          }),    
+          }),
         ],
       });
 
@@ -2184,7 +2184,7 @@ describe('Parser', function () {
           account: { address: 'addr1' },
           amount: { value: '-200' },
           type: 'input',
-        },    
+        },
 
         {
           account: { address: 'addr4' },
@@ -2196,7 +2196,7 @@ describe('Parser', function () {
           account: { address: 'addr5' },
           amount: { value: '-1000' },
           type: 'runoff',
-        },        
+        },
       ];
 
       const expectedMatches = [
@@ -2213,7 +2213,7 @@ describe('Parser', function () {
           }],
 
           amounts: [200, 200]
-        },  
+        },
 
         {
           operations: [{
@@ -2228,7 +2228,7 @@ describe('Parser', function () {
           }],
 
           amounts: [-200, -200]
-        },     
+        },
 
         {
           operations: [{
@@ -2238,7 +2238,7 @@ describe('Parser', function () {
           }],
 
           amounts: [-1000]
-        },   
+        },
       ];
 
       let matches;
@@ -2250,7 +2250,7 @@ describe('Parser', function () {
       }
 
       expect(c(matches)).to.deep.equal(expectedMatches);
-    });    
+    });
 
     it('should match an optional description, that is not met', async function () {
       const parser = new RosettaSDK.Parser();
@@ -2323,7 +2323,7 @@ describe('Parser', function () {
       }
 
       expect(c(matches)).to.deep.equal(expectedMatches);
-    });   
+    });
 
    it('should reject to match an optional description when equal amounts were not found', async function () {
       const parser = new RosettaSDK.Parser();
@@ -2387,7 +2387,7 @@ describe('Parser', function () {
 
       expect(thrown).to.equal(true);
       expect(c(matches)).to.deep.equal(expectedMatches);
-    });   
+    });
 
     it('should reject to match an optional description when opposite amounts were not found', async function () {
       const parser = new RosettaSDK.Parser();
@@ -2451,7 +2451,23 @@ describe('Parser', function () {
 
       expect(thrown).to.equal(true);
       expect(c(matches)).to.deep.equal(expectedMatches);
-    });   
+    });
+
+    it('should reject with not valid sign', async function () {
+      let thrown = false;
+      try {
+        new AmountDescription({
+          exists: true,
+          sign: 'not valid',
+        });
+      } catch (e) {
+        expect(e.name).to.equal('InternalError');
+        expect(e.message).to.equal('Sign\'s constructor doesn\'t allow \'not valid\'');
+        thrown = true;
+      }
+
+      expect(thrown).to.equal(true);
+    });
   });
 
   describe('Test Match', function () {

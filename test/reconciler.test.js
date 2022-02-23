@@ -25,6 +25,9 @@ const { expect } = require('chai');
 const RosettaSDK = require('..');
 
 const { Hash } = require('../lib/utils');
+const sleep = require('../lib/utils/sleep');
+const Rosetta = require('../index');
+const { launchServer, getPort } = require('./fetcher.test');
 
 const {
   AccountCurrency
@@ -72,7 +75,7 @@ describe('Reconciler Tests', function () {
       expect(reconciler.interestingAccounts).to.deep.equal([accountCurrency]);
       expect(reconciler.lookupBalanceByBlock).to.deep.equal(RosettaSDK.Reconciler.defaults.lookupBalanceByBlock);
       expect(reconciler.changeQueue).to.deep.equal([]);
-    });  
+    });
 
     it('should have seen accounts set', async function () {
       const options = {
@@ -91,7 +94,7 @@ describe('Reconciler Tests', function () {
       expect(reconciler.interestingAccounts).to.deep.equal([]);
       expect(reconciler.lookupBalanceByBlock).to.deep.equal(RosettaSDK.Reconciler.defaults.lookupBalanceByBlock);
       expect(reconciler.changeQueue).to.deep.equal([]);
-    });   
+    });
 
     it('should have the correct setting for lookupBalanceByBlock', async function () {
       const options = {
@@ -104,7 +107,7 @@ describe('Reconciler Tests', function () {
       expect(reconciler.interestingAccounts).to.deep.equal([]);
       expect(reconciler.lookupBalanceByBlock).to.deep.equal(false);
       expect(reconciler.changeQueue).to.deep.equal([]);
-    });  
+    });
   });
 
   describe('Contains AccountCurrency', function () {
@@ -211,7 +214,7 @@ describe('Reconciler Tests', function () {
       ));
 
       expect(found).to.equal(false);
-    });    
+    });
   });
 
   describe('Test ExtractAmount', function () {
@@ -230,7 +233,7 @@ describe('Reconciler Tests', function () {
       } catch (e) {
         expect(e.message).to.equal('Could not extract amount for {"symbol":"no curr","decimals":100}');
         thrown = true;
-      } 
+      }
 
       expect(thrown).to.equal(true);
     });
@@ -244,7 +247,7 @@ describe('Reconciler Tests', function () {
       } catch (e) {
         console.error(e);
         thrown = true;
-      } 
+      }
 
       expect(thrown).to.equal(false);
     });
@@ -258,14 +261,14 @@ describe('Reconciler Tests', function () {
       } catch (e) {
         console.error(e);
         thrown = true;
-      } 
+      }
 
       expect(thrown).to.equal(false);
-    });    
+    });
   });
 
   describe('Test CompareBalance', async function () {
-    const account1 = new AccountIdentifier('blah');
+    const account1 = new AccountIdentifier('address');
     const account2 = AccountIdentifier.constructFromObject({
       address: 'blah',
       sub_account: new SubAccountIdentifier('sub blah'),
@@ -277,9 +280,9 @@ describe('Reconciler Tests', function () {
     const amount1 = new Amount('100', currency1);
     const amount2 = new Amount('200', currency2);
 
-    const block0 = new BlockIdentifier(0, 'block0');
-    const block1 = new BlockIdentifier(1, 'block1');
-    const block2 = new BlockIdentifier(2, 'block2');
+    const block0 = new BlockIdentifier(10, 'block 10');
+    const block1 = new BlockIdentifier(11, 'block 11');
+    const block2 = new BlockIdentifier(12, 'block 12');
 
     const helper = {
       headBlock: null,
@@ -347,15 +350,15 @@ describe('Reconciler Tests', function () {
       } catch(e) {
         thrown = true;
         // console.error(e);
-        expect(e.message).to.equal('Live block 1 > head block 0');
+        expect(e.message).to.equal('Live block 11 > head block 10');
       }
 
       expect(thrown).to.equal(true);
-    });    
+    });
 
     it('should set another head block', function () {
-      helper.headBlock = new BlockIdentifier(2, 'hash2');
-    });    
+      helper.headBlock = block2;
+    });
 
     it('should throw that a block is missing', async function () {
       let thrown = false;
@@ -369,11 +372,11 @@ describe('Reconciler Tests', function () {
       } catch(e) {
         thrown = true;
         // console.error(e);
-        expect(e.message).to.equal('Block gone! Block hash = block1');
+        expect(e.message).to.equal('Block gone! Block hash = block 11');
       }
 
       expect(thrown).to.equal(true);
-    }); 
+    });
 
     it('should reconfigure helper', function () {
       helper.storedBlocks[block0.hash] = new Block(block0, block0);
@@ -382,7 +385,7 @@ describe('Reconciler Tests', function () {
       helper.balanceAccount = account1;
       helper.balanceAmount = amount1;
       helper.balanceBlock = block1;
-    });   
+    });
 
     it('should throw an error that the account was updated after live block', async function () {
       let thrown = false;
@@ -396,10 +399,28 @@ describe('Reconciler Tests', function () {
       } catch(e) {
         thrown = true;
         // console.error(e);
-        expect(e.message).to.equal('Account updated: {"address":"blah"} updated at blockheight 1');
+        expect(e.message).to.equal('Account updated: {"address":"address"} updated at blockheight 11');
       }
 
-      expect(thrown).to.equal(true);      
+      expect(thrown).to.equal(true);
+    });
+
+    it('should throw that amount NaN', async function () {
+      let thrown = false;
+      try {
+        await reconciler.compareBalance(
+          account1,
+          currency1,
+          NaN,
+          block1,
+        );
+      } catch(e) {
+        expect(e.name).to.equal('InputError');
+        expect(e.message).to.equal('Value B is NaN');
+        thrown = true;
+      }
+
+      expect(thrown).to.equal(true);
     });
 
     it('should return the correct account balance', async function () {
@@ -414,14 +435,14 @@ describe('Reconciler Tests', function () {
 
         expect(difference).to.equal('0');
         expect(cachedBalance).to.equal(amount1.value);
-        expect(headIndex).to.equal(2);
+        expect(headIndex).to.equal(12);
       } catch(e) {
         thrown = true;
         console.error(e);
       }
 
-      expect(thrown).to.equal(false);      
-    });    
+      expect(thrown).to.equal(false);
+    });
 
     it('should return another balance', async function () {
       let thrown = false;
@@ -435,14 +456,14 @@ describe('Reconciler Tests', function () {
 
         expect(difference).to.equal('-100');
         expect(cachedBalance).to.equal(amount1.value);
-        expect(headIndex).to.equal(2);
+        expect(headIndex).to.equal(12);
       } catch(e) {
         thrown = true;
         console.error(e);
       }
 
-      expect(thrown).to.equal(false);      
-    });    
+      expect(thrown).to.equal(false);
+    });
 
     it('should throw when comparing balance for a non-existing account', async function () {
       let thrown = false;
@@ -462,8 +483,149 @@ describe('Reconciler Tests', function () {
         expect(e.message).to.equal('Account does not exist');
       }
 
-      expect(thrown).to.equal(true);      
-    }); 
+      expect(thrown).to.equal(true);
+    });
+
+    it('should pass reconcileActiveAccounts', async function () {
+      let thrown = false;
+      const port = getPort();
+      const server = await launchServer({
+        errorsBeforeSuccess: 0,
+        port,
+      });
+      const fetcher = new Rosetta.Fetcher({
+        retryOptions: {
+          numOfAttempts: 5,
+        },
+        server: {
+          port,
+        },
+      });
+      const networkIdentifier = new Rosetta.Client.NetworkIdentifier.constructFromObject({
+        blockchain: "blockchain",
+        network:    "network",
+      });
+      const options = {
+        lookupBalanceByBlock: false,
+        fetcher,
+        networkIdentifier,
+        helper: {
+          ...helper,
+          accountBalance: function (account, currency, headBlock) {
+            if (!this.balanceAccount || Hash(this.balanceAccount) != Hash(account)) {
+              throw new Error('Account does not exist');
+            }
+
+            return {
+              cachedBalance: new Amount('1000', currency1),
+              balanceBlock: block0,
+            };
+          },
+        },
+        handler: {
+          reconciliationFailed: function (reconciliationType, account_identifier, currency, cachedBalance, amount, blockIdentifier) {
+
+          },
+          reconciliationSucceeded: async function (reconciliationType, account_identifier, currency, amount, blockIdentifier) {
+            return Promise.resolve();
+          },
+        },
+      };
+      const reconciler = new RosettaSDK.Reconciler(options);
+      const balanceChange = [{
+        account_identifier: new AccountCurrency({
+          accountIdentifier: account1,
+        }),
+        currency: new Currency('BTC', 8),
+        block: block0,
+        difference: "0",
+      }];
+      await reconciler.queueChanges(block0, balanceChange);
+      try {
+        await reconciler.reconcileActiveAccounts(false);
+      } catch (e) {
+        thrown = true;
+      }
+
+      expect(thrown).to.deep.equal(false);
+    });
+
+    it('should pass reconcileInactiveAccounts', async function () {
+      let thrown = false;
+      const port = getPort();
+      const server = await launchServer({
+        errorsBeforeSuccess: 0,
+        port,
+      });
+      const fetcher = new Rosetta.Fetcher({
+        retryOptions: {
+          numOfAttempts: 5,
+        },
+        server: {
+          port,
+        },
+      });
+      const networkIdentifier = new Rosetta.Client.NetworkIdentifier.constructFromObject({
+        blockchain: "blockchain",
+        network:    "network",
+      });
+      const options = {
+        inactiveFrequency: 2,
+        lookupBalanceByBlock: false,
+        fetcher,
+        networkIdentifier,
+        helper: {
+          ...helper,
+          accountBalance: function (account, currency, headBlock) {
+            if (!this.balanceAccount || Hash(this.balanceAccount) != Hash(account)) {
+              throw new Error('Account does not exist');
+            }
+
+            return {
+              cachedBalance: new Amount('1000', currency1),
+              balanceBlock: block0,
+            };
+          },
+        },
+        handler: {
+          reconciliationFailed: function (reconciliationType, account_identifier, currency, cachedBalance, amount, blockIdentifier) {
+
+          },
+          reconciliationSucceeded: async function (reconciliationType, account_identifier, currency, amount, blockIdentifier) {
+            return Promise.resolve();
+          },
+        },
+      };
+      const reconciler = new RosettaSDK.Reconciler(options);
+      const balanceChange = [{
+        account_identifier: new AccountCurrency({
+          accountIdentifier: account1,
+        }),
+        currency: new Currency('BTC', 8),
+        block: block0,
+        difference: "0",
+      }];
+      await reconciler.queueChanges(block0, balanceChange);
+      try {
+        await reconciler.reconcileInactiveAccounts(false);
+      } catch (e) {
+        thrown = true;
+      }
+
+      expect(thrown).to.deep.equal(false);
+    });
+
+    it('should pass sleep', async function () {
+      let thrown = false;
+
+      try {
+        await sleep(1000);
+      } catch (e) {
+        thrown = true;
+      }
+
+      expect(thrown).to.deep.equal(false);
+    });
   });
 });
 
