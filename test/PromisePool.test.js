@@ -1,4 +1,5 @@
 /**
+ * @license
  * Copyright (c) 2020 DigiByte Foundation NZ Limited
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -24,10 +25,11 @@
  * Author: Yoshi Jaeger
  */
 
-const PromisePool = require('./PromisePool');
+const PromisePool = require('../lib/utils/PromisePool');
 const { expect } = require('chai');
 
 const array = [];
+const defaultArray = [];
 const poolSize = 2;
 
 const testFunction = (timeout, text) => {
@@ -36,6 +38,13 @@ const testFunction = (timeout, text) => {
       array.push(text);
       fulfill(text);
     }, timeout);
+  });
+};
+
+const testDefaultFunction = (text) => {
+  return new Promise((fulfill, reject) => {
+    defaultArray.push(text);
+    fulfill(text);
   });
 };
 
@@ -60,9 +69,22 @@ describe('PromisePool', function () {
       // Promises should return their data in correct order
       expect(data).to.deep.equal(['first', 'second', 'fourth', 'third']);
 
-      // Test finished      
+      // Test finished
       done();
-    });    
+    });
+  });
+
+  it('pass default applier', async function () {
+    let thrown = false;
+
+    try {
+      await PromisePool.defaultApplier(testDefaultFunction, 'first');
+    } catch (e) {
+      thrown = true;
+    }
+
+    expect(thrown).to.deep.equal(false);
+    expect(defaultArray).to.deep.equal(['first']);
   });
 });
 

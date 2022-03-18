@@ -20,9 +20,6 @@ Supported Rosetta Protocol Version: 1.4.1
 
 This project is a port of the official Go reference implementation. All features, except a [few exceptions](docs/api_limitations.md), have been ported to JS.
 
-⚠️ WARNING ⚠️
-Due to the lack of funding, I wasn't able to continue the work on `rosetta-node-sdk`.
-
 ## Motivation
 Coinbase's [Official Go Reference Implementation](https://github.com/coinbase/rosetta-sdk-go.git) is a thouroughly tested and wonderful SDK Implementation. However, as many developers are better suited to use NodeJS/Javascript, DigiByte decided to port the reference implementation to NodeJS while maintaining support for all it's core components.  
 
@@ -82,7 +79,6 @@ const {
 - **version** - Specifies the version of this SDK. This semver is equal to the Rosetta API SDK for convencience.
 
 ### ToDos
-- [ ] Setup CI (`npm run test` will execute 313 tests)
+- [ ] Setup CI (`npm run test` will execute 358 tests)
 - [ ] Support `keys` (cryptographic API) 
-- [ ] Documentation 
 - [ ] Test Reconciler in live environment

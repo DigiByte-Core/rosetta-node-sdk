@@ -1,1 +1,10 @@
 **/node_modules
+.nyc_output/
+coverage/
+jsdoc/
+
+.DS_Store
+yarn.lock
+package-lock.json
+error.log
+combined.log

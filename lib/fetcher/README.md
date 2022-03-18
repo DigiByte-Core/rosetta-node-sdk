@@ -41,10 +41,10 @@ const fetcher = new RosettaSDK.Fetcher({
 
   /* Or configure the fetcher directly */
   server: {
-    protocol = 'https',
-    host = 'digibyte.one',
-    port = 8000,
-    timeout = 10000,
+    protocol: 'https',
+    host: 'digibyte.one',
+    port: 8000,
+    timeout: 10000,
 
     /* See superagent documentation */
     requestAgent: requestAgentInstance
